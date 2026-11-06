@@ -2,7 +2,7 @@
 
 친구들과 웹에서 하는 「레지스탕스: 아발론」. 원형 테이블에 1인칭으로 둘러앉아, 서로의 시선과 테이블 위 토큰·카드를 보며 플레이합니다.
 
-문서: [spec](specs/avalon/spec.md) · [plan](specs/avalon/plan.md) · [tasks](specs/avalon/tasks.md) · **[코드 공부 가이드](docs/STUDY.md)** · [호스팅 방식 비교](docs/HOSTING.md)
+문서: [spec](specs/avalon/spec.md) · [plan](specs/avalon/plan.md) · [tasks](specs/avalon/tasks.md) · **[코드 공부 가이드](docs/STUDY.md)** · **[다른 컴퓨터에서 실행하기](docs/SETUP.md)**
 
 ## 처음 한 번
 
