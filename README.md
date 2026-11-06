@@ -2,7 +2,7 @@
 
 친구들과 웹에서 하는 「레지스탕스: 아발론」. 원형 테이블에 1인칭으로 둘러앉아, 서로의 시선과 테이블 위 토큰·카드를 보며 플레이합니다.
 
-문서: [spec](../specs/avalon/spec.md) · [plan](../specs/avalon/plan.md) · [tasks](../specs/avalon/tasks.md)
+문서: [spec](specs/avalon/spec.md) · [plan](specs/avalon/plan.md) · [tasks](specs/avalon/tasks.md) · **[코드 공부 가이드](docs/STUDY.md)** · [호스팅 방식 비교](docs/HOSTING.md)
 
 ## 처음 한 번
 
@@ -67,10 +67,18 @@ cloudflared tunnel --url http://localhost:3000
 - 두 터미널 중 하나라도 닫으면 접속이 끊깁니다. 노트북은 전원을 연결하고 절전 모드를 꺼 두세요. 서버가 꺼지면 진행 중인 게임이 사라집니다.
 - 새로고침하면 같은 자리로 돌아옵니다. 브라우저를 아예 닫았다면 같은 방 코드와 **같은 닉네임**으로 다시 입장하면 원래 자리와 역할로 돌아옵니다 (게임 중에도 가능).
 
+### 터널이 안 열릴 때
+
+`failed to request quick Tunnel … server gave HTTP response to HTTPS client`가 나오면, 지금 연결된 네트워크(학교·기관 와이파이 등)가 터널 주소를 막고 있는 것입니다. 설정 문제가 아니라서 명령을 바꿔도 해결되지 않습니다.
+
+- **가장 쉬운 방법**: 휴대폰 핫스팟이나 집 와이파이처럼 다른 네트워크에 연결한 뒤 같은 명령을 다시 실행합니다.
+- 확인 방법: `curl.exe -s -o NUL -w "%{http_code}" https://api.trycloudflare.com/` 가 `000`이고 오류 코드가 35면 막힌 네트워크입니다.
+- 이런 네트워크에서는 Cloudflare 터널(계정이 있어도), ngrok, localhost.run도 함께 막혀 있을 수 있습니다.
+
 ## 테스트
 
 ```bash
-npm test          # 규칙 엔진 19개 + 서버 통합 1개
+npm test          # 규칙 엔진 20개 + 서버 통합 1개
 npm run typecheck
 ```
 

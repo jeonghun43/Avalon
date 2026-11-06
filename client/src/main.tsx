@@ -4,8 +4,11 @@ import { useStore } from './store';
 import { Entry } from './screens/Entry';
 import { Game } from './screens/Game';
 import { Toast } from './ui/Toast';
+import { loadMuted } from './ui/sound';
 import './net/socket';
 import './ui/game.css';
+
+useStore.setState({ muted: loadMuted() });
 
 function App() {
   const view = useStore((s) => s.view);

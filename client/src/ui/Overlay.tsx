@@ -4,7 +4,10 @@ import {
   type GameView, type Knowledge, type PlayerInfo, type RoomOptions, type RoomView,
 } from '@avalon/shared';
 import { api } from '../net/socket';
-import { josa, useStore } from '../store';
+import { isMyTurn, josa, useStore } from '../store';
+import { saveMuted, sound } from './sound';
+import { SeatMap } from './SeatMap';
+import { ChatPanel } from './ChatPanel';
 
 type Names = (id: string) => PlayerInfo | undefined;
 
@@ -57,21 +60,63 @@ function statusOf(view: RoomView, names: Names): { chip: string; chipKind?: stri
 function StatusBar({ view, names }: { view: RoomView; names: Names }) {
   const s = statusOf(view, names);
   const g = view.game;
+  const mine = isMyTurn(view);
+  const away = g && g.phase !== 'GAME_OVER' ? view.players.filter((p) => !p.connected) : [];
   return (
-    <div className="ui status">
+    <div className={`ui status ${mine ? 'my-turn' : ''}`} role="status">
+      {mine && <span className="turn-tag">내 차례</span>}
       <span className={`chip ${s.chipKind ?? ''}`}>{s.chip}</span>
       <span className="status-text">{s.text}</span>
       {g && g.phase !== 'GAME_OVER' && <span className="rejects" title="연속 부결 횟수 (5번이면 악의 승리)">거부 {[0, 1, 2, 3, 4].map((i) => <i key={i} className={i < g.rejects ? 'on' : ''} />)}</span>}
+      {away.length > 0 && (
+        <span className="away">{away.map((p) => p.nickname).join(', ')} 기다리는 중 · 연결 끊김</span>
+      )}
     </div>
+  );
+}
+
+/** 내 차례가 되면 탭 제목과 효과음으로 알린다. 원정 카드가 뒤집힐 때와 결과에도 소리 */
+function TurnEffects({ view }: { view: RoomView }) {
+  const mine = isMyTurn(view);
+  const g = view.game;
+  const prevMine = useRef(false);
+  const flipped = useRef(0);
+  useEffect(() => {
+    document.title = mine ? '(내 차례) 아발론 원탁' : '아발론 원탁';
+    if (mine && !prevMine.current) sound.turn();
+    prevMine.current = mine;
+  }, [mine]);
+  useEffect(() => () => { document.title = '아발론 원탁'; }, []);
+  const shown = g?.phase === 'QUEST_REVEAL' ? g.questReveal?.length ?? 0 : 0;
+  useEffect(() => {
+    if (shown > flipped.current) {
+      sound.flip();
+      if (g && shown === g.questRevealCount) {
+        const r = g.questResults[g.questResults.length - 1];
+        setTimeout(() => (r === 'FAIL' ? sound.fail() : sound.success()), 350);
+      }
+    }
+    flipped.current = shown;
+  }, [shown]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+}
+
+function SoundToggle() {
+  const muted = useStore((s) => s.muted);
+  return (
+    <button className="ui sound-btn" aria-pressed={!muted} onClick={() => { useStore.setState({ muted: !muted }); saveMuted(!muted); }}>
+      {muted ? '소리 꺼짐' : '소리 켜짐'}
+    </button>
   );
 }
 
 // ── 로비 ─────────────────────────────────────────────────
 function RoomCode({ code }: { code: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const ref = useRef<HTMLElement>(null);
-  const copy = () => {
-    navigator.clipboard.writeText(code).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1500); }).catch(() => {
+  const link = `${location.origin}/?code=${code}`;
+  const copy = (what: 'code' | 'link') => {
+    navigator.clipboard.writeText(what === 'code' ? code : link).then(() => { setCopied(what); setTimeout(() => setCopied(null), 1500); }).catch(() => {
       const r = document.createRange();
       if (ref.current) { r.selectNodeContents(ref.current); getSelection()?.removeAllRanges(); getSelection()?.addRange(r); }
     });
@@ -79,7 +124,8 @@ function RoomCode({ code }: { code: string }) {
   return (
     <div className="ui room-code">
       방 코드 <b ref={ref}>{code}</b>
-      <button className="chip" onClick={copy}>{copied ? '복사됨' : '복사'}</button>
+      <button className="chip" onClick={() => copy('code')}>{copied === 'code' ? '복사됨' : '코드 복사'}</button>
+      <button className="chip" onClick={() => copy('link')} title={link}>{copied === 'link' ? '복사됨' : '초대 링크'}</button>
     </div>
   );
 }
@@ -168,7 +214,8 @@ function RoleCard({ view, names, onClose, reveal }: { view: RoomView; names: Nam
         <span className="k">내가 아는 정보</span>
         {lines.length ? lines : <div>특별히 아는 사람은 없어요.</div>}
         <div className="row-end">
-          {reveal && <span className="k">{g.ackCount}/{view.players.length}명 확인함</span>}
+          {reveal && g.phase === 'ROLE_REVEAL' && <span className="k">{g.ackCount}/{view.players.length}명 확인함 · <Countdown /></span>}
+          {reveal && g.phase !== 'ROLE_REVEAL' && <span className="k">게임이 이미 시작됐어요. 다 읽고 확인을 눌러 주세요.</span>}
           <button className="btn" onClick={onClose} autoFocus>{reveal ? '확인했어요' : '닫기'}</button>
         </div>
       </div>
@@ -176,7 +223,36 @@ function RoleCard({ view, names, onClose, reveal }: { view: RoomView; names: Nam
   );
 }
 
+/** 자동으로 넘어가기까지 남은 시간 (서버가 보낸 값 기준) */
+function Countdown() {
+  const timerMs = useStore((s) => s.view?.timerMs ?? null);
+  const stateAt = useStore((s) => s.stateAt);
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 250); return () => clearInterval(t); }, []);
+  if (timerMs === null) return null;
+  const left = Math.max(0, Math.ceil((timerMs - (now - stateAt)) / 1000));
+  return <span className="countdown">{left}초 뒤 게임 시작</span>;
+}
+
 // ── 손패 ─────────────────────────────────────────────────
+function QuestHand({ good }: { good: boolean }) {
+  const [pick, setPick] = useState<boolean | null>(null);
+  return (
+    <div className="hand">
+      <button className={`hcard success ${pick === true ? 'picked' : ''}`} onClick={() => setPick(true)}><span className="ic">✓</span><span>성공</span></button>
+      <button className={`hcard fail ${pick === false ? 'picked' : ''}`} disabled={good} onClick={() => setPick(false)}><span className="ic">✕</span><span>실패</span></button>
+      {pick === null
+        ? <span className="hand-note">{good ? '선의 세력은 성공만 낼 수 있어요' : '낼 카드를 고르세요'}</span>
+        : (
+          <span className="hand-note confirm">
+            <b>{pick ? '성공' : '실패'}</b> 카드를 낼까요? 내면 바꿀 수 없어요
+            <button className="btn small" onClick={() => api.act({ type: 'QUEST_CARD', success: pick })}>이 카드 내기</button>
+          </span>
+        )}
+    </div>
+  );
+}
+
 function Hand({ view }: { view: RoomView }) {
   const g = view.game!;
   const me = view.meId;
@@ -192,14 +268,7 @@ function Hand({ view }: { view: RoomView }) {
   }
   if (g.phase === 'QUEST' && g.team.includes(me)) {
     if (g.me.questCard !== null) return <div className="hand"><span className="hand-note">원정 카드를 냈어요</span></div>;
-    const good = g.me.team === 'GOOD';
-    return (
-      <div className="hand">
-        <button className="hcard success" onClick={() => api.act({ type: 'QUEST_CARD', success: true })}><span className="ic">✓</span><span>성공</span></button>
-        <button className="hcard fail" disabled={good} onClick={() => api.act({ type: 'QUEST_CARD', success: false })}><span className="ic">✕</span><span>실패</span></button>
-        {good && <span className="hand-note">선의 세력은 성공만 낼 수 있어요</span>}
-      </div>
-    );
+    return <QuestHand good={g.me.team === 'GOOD'} />;
   }
   if (g.phase === 'TEAM_BUILDING' && g.leaderId === me) {
     const size = g.teamSizes[g.round];
@@ -355,6 +424,39 @@ function History({ view, names, onClose }: { view: RoomView; names: Names; onClo
   );
 }
 
+/** 게임 화면 첫 둘러보기 안내: 처음 드래그하거나 방향키를 누르면 사라진다 */
+function LookHint() {
+  const [show, setShow] = useState(() => {
+    try { return sessionStorage.getItem('avalon-look-hint') !== '1'; } catch { return true; }
+  });
+  useEffect(() => {
+    if (!show) return;
+    const hide = () => {
+      setShow(false);
+      try { sessionStorage.setItem('avalon-look-hint', '1'); } catch { /* noop */ }
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key.startsWith('Arrow')) hide(); };
+    const t = setTimeout(hide, 12_000);
+    window.addEventListener('pointerdown', hide, { once: true });
+    window.addEventListener('keydown', onKey);
+    return () => { clearTimeout(t); window.removeEventListener('pointerdown', hide); window.removeEventListener('keydown', onKey); };
+  }, [show]);
+  if (!show) return null;
+  return <div className="look-hint">화면을 드래그하거나 ← → ↑ ↓ 키로 둘러보세요</div>;
+}
+
+/** 휴대폰 세로 화면이면 가로로 돌리도록 안내 (닫을 수 있음) */
+function RotateHint() {
+  const [closed, setClosed] = useState(false);
+  if (closed) return null;
+  return (
+    <div className="ui rotate-hint">
+      휴대폰을 가로로 돌리면 테이블이 더 잘 보여요
+      <button className="btn small ghost" onClick={() => setClosed(true)}>닫기</button>
+    </div>
+  );
+}
+
 // ── 조립 ─────────────────────────────────────────────────
 export function Overlay({ view }: { view: RoomView }) {
   const connected = useStore((s) => s.connected);
@@ -362,20 +464,45 @@ export function Overlay({ view }: { view: RoomView }) {
   const g = view.game;
   const [roleOpen, setRoleOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const revealing = g?.phase === 'ROLE_REVEAL' && !g.me.acked;
+  // 확인을 누를 때까지 역할 카드를 유지 (20초가 지나 게임이 넘어가도)
+  const revealing = !!g && g.phase !== 'GAME_OVER' && !g.me.acked;
+  const me = view.players.find((p) => p.id === view.meId)!;
+  const myTags: { text: string; kind?: string }[] = [];
+  if (g && g.phase !== 'GAME_OVER') {
+    if (g.leaderId === me.id) myTags.push({ text: '원정대장' });
+    if (g.team.includes(me.id)) myTags.push({ text: '원정대원' });
+    if (g.lady?.holderId === me.id) myTags.push({ text: '호수의 여인', kind: 'blue' });
+    if (g.phase === 'TEAM_VOTE' && g.me.voted !== null) myTags.push({ text: '투표함', kind: 'dark' });
+    if (g.phase === 'QUEST' && g.me.questCard !== null) myTags.push({ text: '카드 냄', kind: 'dark' });
+  }
 
   return (
     <div className="overlay">
+      <TurnEffects view={view} />
       <StatusBar view={view} names={names} />
       {!g && <RoomCode code={view.code} />}
       {!g && <LobbyPanel view={view} />}
+      {g && <SeatMap view={view} />}
+      <ChatPanel inGame={!!g} />
       {g && (
         <button className="ui role-mini" onClick={() => setRoleOpen(true)} aria-label="내 역할 펼치기">
           <RoleBadge g={g} />
-          <span><b>{ROLE_NAME[g.me.role]}</b><small>{g.me.team === 'GOOD' ? '선의 세력' : '악의 세력'} · 눌러서 펼치기</small></span>
+          <span>
+            <b>{ROLE_NAME[g.me.role]}</b>
+            <small>{g.me.team === 'GOOD' ? '선의 세력' : '악의 세력'} · 눌러서 펼치기</small>
+            <span className="me-tags">
+              <span className="who"><i className="dot" style={{ background: me.color }} />나 · {me.nickname}</span>
+              {myTags.map((t) => <span key={t.text} className={`chip ${t.kind ?? ''}`}>{t.text}</span>)}
+            </span>
+          </span>
         </button>
       )}
-      {g && <button className="ui rec-btn" onClick={() => setHistoryOpen((v) => !v)}>기록</button>}
+      <div className="corner-btns">
+        <SoundToggle />
+        {g && <button className="ui rec-btn" onClick={() => setHistoryOpen((v) => !v)}>기록</button>}
+      </div>
+      {g && <LookHint />}
+      <RotateHint />
       {g && <Hand view={view} />}
       {g && <ConfirmBar view={view} names={names} />}
       {g && <RevealBanner g={g} />}

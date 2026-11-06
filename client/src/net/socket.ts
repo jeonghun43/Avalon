@@ -1,6 +1,6 @@
 import { io } from 'socket.io-client';
-import type { GameAction, RoomOptions, RoomView } from '@avalon/shared';
-import { useStore } from '../store';
+import type { ChatMessage, GameAction, RoomOptions, RoomView } from '@avalon/shared';
+import { useStore, type ChatEntry } from '../store';
 
 export const socket = io({ transports: ['websocket', 'polling'] });
 
@@ -43,11 +43,13 @@ async function run<T = object>(event: string, payload?: unknown) {
 
 export const api = {
   async create(nickname: string) {
+    rememberName(nickname);
     const r = await run<{ code: string; token: string }>('room:create', { nickname });
     if (r.ok) saveSession({ code: r.code, token: r.token });
     return r;
   },
   async join(code: string, nickname: string) {
+    rememberName(nickname);
     const r = await run<{ code: string; token: string }>('room:join', { code, nickname });
     if (r.ok) saveSession({ code: r.code, token: r.token });
     return r;
@@ -55,7 +57,7 @@ export const api = {
   async leave() {
     clearSession();
     await call('room:leave');
-    useStore.setState({ view: null, gazes: {} });
+    useStore.setState({ view: null, gazes: {}, chat: [] });
   },
   options: (o: RoomOptions) => run('room:options', o),
   kick: (playerId: string) => run('room:kick', { playerId }),
@@ -63,6 +65,7 @@ export const api = {
   rematch: () => run('game:rematch'),
   act: (a: GameAction) => run('game:action', a),
   gaze: (yaw: number, pitch: number) => socket.volatile.emit('gaze', { yaw, pitch }),
+  chat: (text: string) => run('chat:send', { text }),
 };
 
 socket.on('connect', async () => {
@@ -77,13 +80,34 @@ socket.on('connect', async () => {
   }
 });
 socket.on('disconnect', () => useStore.setState({ connected: false }));
-socket.on('state', (view: RoomView) => useStore.setState({ view }));
+socket.on('state', (view: RoomView) => useStore.setState({ view, stateAt: Date.now() }));
+const toEntry = (m: ChatMessage, now: number): ChatEntry => ({
+  id: m.id, fromId: m.fromId, nickname: m.nickname, color: m.color, text: m.text,
+  receivedAt: now, expiresAt: now + m.expiresInMs,
+});
+socket.on('chat:history', (list: ChatMessage[]) => {
+  const now = Date.now();
+  // 입장 전 말들은 말풍선을 띄우지 않도록 받은 시각을 과거로 둔다
+  useStore.setState({ chat: list.map((m) => ({ ...toEntry(m, now), receivedAt: 0 })) });
+});
+socket.on('chat:new', (m: ChatMessage) =>
+  useStore.setState((st) => ({ chat: [...st.chat.filter((c) => c.expiresAt > Date.now()), toEntry(m, Date.now())].slice(-50) })));
+
 socket.on('gaze', (g: { id: string; yaw: number; pitch: number }) =>
   useStore.setState((st) => ({ gazes: { ...st.gazes, [g.id]: { yaw: g.yaw, pitch: g.pitch } } })));
 socket.on('kicked', () => {
   clearSession();
-  useStore.setState({ view: null, gazes: {} });
+  useStore.setState({ view: null, gazes: {}, chat: [] });
   useStore.getState().showToast('방장이 방에서 내보냈어요.', 'error');
 });
 
 export const hasSession = () => loadSession() !== null;
+
+// 마지막으로 쓴 닉네임은 기기에 기억해 둔다 (방 정보와 달리 탭끼리 공유해도 괜찮다)
+const NAME_KEY = 'avalon-nickname';
+function rememberName(name: string) {
+  try { localStorage.setItem(NAME_KEY, name.trim()); } catch { /* noop */ }
+}
+export function lastName() {
+  try { return localStorage.getItem(NAME_KEY) ?? ''; } catch { return ''; }
+}

@@ -66,6 +66,7 @@ io.on('connection', (socket: Socket) => {
     memberId = id;
     socket.join(r.code);
     clearTimeout(emptyTimers.get(r.code));
+    socket.emit('chat:history', r.chatHistory()); // 아직 사라지지 않은 말만
   };
   const leaveCurrent = () => {
     if (room && memberId) {
@@ -127,6 +128,8 @@ io.on('connection', (socket: Socket) => {
   socket.on('game:rematch', (p, ack) => withRoom((r, id) => r.rematch(id))(p, ack));
   socket.on('game:action', (p: GameAction, ack) =>
     withRoom((r, id) => (p && p.type !== 'ADVANCE' ? r.action(id, p) : { ok: false, error: '알 수 없는 행동이에요.' }))(p, ack));
+
+  socket.on('chat:send', (p: { text?: unknown }, ack) => withRoom((r, id) => r.sendChat(id, p?.text))(p, ack));
 
   socket.on('gaze', (p: { yaw?: number; pitch?: number }) => {
     if (!room || !memberId) return;

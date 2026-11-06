@@ -41,9 +41,10 @@ export function applyAction(prev: GameState, actorId: string | null, action: Gam
 
   switch (action.type) {
     case 'ACK_ROLE': {
-      if (s.phase !== 'ROLE_REVEAL') return fail('지금은 역할을 확인하는 단계가 아니에요.');
+      if (s.phase === 'GAME_OVER') return fail('게임이 끝났어요.');
       if (!s.acks.includes(me)) s.acks.push(me);
-      if (s.acks.length === n) s.phase = 'TEAM_BUILDING';
+      // 20초가 지나 이미 넘어갔어도 확인 기록은 남긴다 (역할 카드를 못 읽은 사람을 위해)
+      if (s.phase === 'ROLE_REVEAL' && s.acks.length === n) s.phase = 'TEAM_BUILDING';
       return { ok: true, state: s };
     }
 

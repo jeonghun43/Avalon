@@ -3,21 +3,26 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { io, type Socket } from 'socket.io-client';
 import type { RoomView } from '@avalon/shared';
 
-const PORT = 3999;
+// 실행마다 다른 포트: 이전 실행의 서버가 남아 있어도 막히지 않게
+const PORT = 40_000 + Math.floor(Math.random() * 10_000);
 const URL = `http://localhost:${PORT}`;
 let server: ChildProcess;
 
 beforeAll(async () => {
-  server = spawn('npx', ['tsx', 'server/src/index.ts'], { env: { ...process.env, PORT: String(PORT) }, shell: true, stdio: 'pipe' });
+  server = spawn('npx', ['tsx', 'server/src/index.ts'], { env: { ...process.env, PORT: String(PORT), CHAT_TTL_MS: '1500' }, shell: true, stdio: 'pipe' });
   await new Promise<void>((resolve, reject) => {
     const t = setTimeout(() => reject(new Error('server did not start')), 20_000);
     server.stdout!.on('data', (d) => { if (String(d).includes('실행 중')) { clearTimeout(t); resolve(); } });
+    server.on('exit', (code) => { clearTimeout(t); reject(new Error(`server exited early (code ${code})`)); });
   });
 }, 30_000);
 
-afterAll(() => {
-  if (process.platform === 'win32') spawn('taskkill', ['/pid', String(server.pid), '/T', '/F']);
-  else server.kill();
+// 서버(와 shell이 띄운 자식 프로세스)가 정말 끝날 때까지 기다린다
+afterAll(async () => {
+  await new Promise<void>((resolve) => {
+    if (process.platform === 'win32') spawn('taskkill', ['/pid', String(server.pid), '/T', '/F']).on('exit', () => resolve());
+    else { server.on('exit', () => resolve()); server.kill(); }
+  });
 });
 
 interface Bot { s: Socket; view: RoomView | null; token: string }
@@ -134,4 +139,45 @@ describe('서버 통합', () => {
     await until(() => bots.slice(0, 4).every((b) => b.view?.game === null));
     bots.forEach((b) => b.s.disconnect());
   }, 90_000);
+});
+
+describe('채팅', () => {
+  it('전달, 16자 제한, 도배 차단, 재접속 때 남은 말만, 만료 삭제', async () => {
+    const [a, b] = [bot(), bot()];
+    const got: { text: string; nickname: string }[] = [];
+    b.s.on('chat:new', (m) => got.push(m));
+    const made = await emit(a, 'room:create', { nickname: '말하는사람' });
+    const code = made.code as string;
+    expect((await emit(b, 'room:join', { code, nickname: '듣는사람' })).ok).toBe(true);
+
+    expect((await emit(a, 'chat:send', { text: '  안녕하세요  ' })).ok).toBe(true);
+    await until(() => got.length === 1);
+    expect(got[0]).toMatchObject({ text: '안녕하세요', nickname: '말하는사람' });
+
+    expect((await emit(a, 'chat:send', { text: '가'.repeat(17) })).ok).toBe(false);
+    expect((await emit(a, 'chat:send', { text: '가'.repeat(16) })).ok).toBe(true);
+    expect((await emit(a, 'chat:send', { text: '   ' })).ok).toBe(false);
+
+    // 연속으로 보내면 통이 비어서 막힌다 (처음 5개 중 2개는 이미 씀)
+    const burst = [];
+    for (let i = 0; i < 6; i++) burst.push((await emit(a, 'chat:send', { text: `도배${i}` })).ok);
+    expect(burst).toContain(false);
+
+    // 새로 들어온 사람은 아직 안 사라진 말을 받는다
+    const c = bot();
+    let history: unknown[] = [];
+    c.s.on('chat:history', (h) => (history = h));
+    await emit(c, 'room:join', { code, nickname: '늦은사람' });
+    await until(() => history.length > 0);
+
+    // 1.5초(테스트용 유지 시간)가 지나면 새로 들어온 사람은 아무것도 받지 않는다
+    await new Promise((r) => setTimeout(r, 1700));
+    const d = bot();
+    let history2: unknown[] | null = null;
+    d.s.on('chat:history', (h) => (history2 = h));
+    await emit(d, 'room:join', { code, nickname: '더늦은사람' });
+    await until(() => history2 !== null);
+    expect(history2).toEqual([]);
+    [a, b, c, d].forEach((x) => x.s.disconnect());
+  }, 30_000);
 });

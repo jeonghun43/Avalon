@@ -98,6 +98,19 @@ export interface RoomView {
   players: PlayerInfo[];
   options: RoomOptions;
   game: GameView | null;
+  /** 자동으로 넘어가는 단계의 남은 시간 (보낼 때 기준, ms). 없으면 null */
+  timerMs: number | null;
+}
+
+/** 말하듯 잠깐 보였다 사라지는 채팅 한 줄 */
+export interface ChatMessage {
+  id: string;
+  fromId: string;
+  nickname: string;   // 보낸 뒤 방을 나가도 이름이 남도록 보낼 때 복사
+  color: string;
+  text: string;
+  /** 서버가 보낼 때 기준으로 사라지기까지 남은 시간 (ms). 시계가 달라도 괜찮게 상대 시간으로 보냄 */
+  expiresInMs: number;
 }
 
 export type GameAction =

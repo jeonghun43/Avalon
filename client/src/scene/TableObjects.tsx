@@ -166,14 +166,20 @@ function QuestCards({ g }: { g: GameView }) {
 export function TableObjects({ g, players, mySeat }: { g: GameView; players: PlayerInfo[]; mySeat: number }) {
   const n = players.length;
   const seatOf = (id: string) => players.find((p) => p.id === id)?.seat ?? 0;
-  const showVotes = g.phase === 'TEAM_VOTE' || g.phase === 'VOTE_REVEAL';
-  const voteIds = g.phase === 'VOTE_REVEAL' && g.revealedVotes ? Object.keys(g.revealedVotes) : g.votedIds;
-  const teamVisible = ['TEAM_BUILDING', 'TEAM_VOTE', 'VOTE_REVEAL', 'QUEST', 'QUEST_REVEAL'].includes(g.phase);
+  // 테이블에는 지금 단계에 필요한 물건만 놓는다 (라운드 보드·거부 트랙만 항상)
+  const p = g.phase;
+  const crownVisible = p === 'TEAM_BUILDING' || p === 'TEAM_VOTE' || p === 'VOTE_REVEAL';
+  const teamVisible = crownVisible || p === 'QUEST' || p === 'QUEST_REVEAL';
+  const ladyVisible = p === 'LADY';
+  // 찬반 카드는 투표 중(낸 사람 앞 뒷면)과 투표 공개(앞면)에만. 지난 투표는 기록 패널에서 본다
+  const faceUp = p === 'VOTE_REVEAL' ? g.revealedVotes : null;
+  const showVotes = p === 'TEAM_VOTE' || faceUp !== null;
+  const voteIds = faceUp ? Object.keys(faceUp) : g.votedIds;
 
   return (
     <group>
       <RoundBoard g={g} />
-      {g.phase !== 'GAME_OVER' && (
+      {crownVisible && (
         <Glide to={tableSpot(seatOf(g.leaderId), n, mySeat, 0.86, -0.2)} flip drop={false}>
           <Crown />
         </Glide>
@@ -183,13 +189,13 @@ export function TableObjects({ g, players, mySeat }: { g: GameView; players: Pla
           <Coin color="#E7C15A" text="원정" />
         </Glide>
       ))}
-      {g.lady && g.phase !== 'GAME_OVER' && (
+      {g.lady && ladyVisible && (
         <Glide key={`lady-${g.lady.holderId}`} to={[...tableSpot(seatOf(g.lady.holderId), n, mySeat, 0.74, 0.32)].map((v, i) => (i === 1 ? v + 0.03 : v)) as [number, number, number]} flip>
           <Coin color="#7FC4E0" text="호수" />
         </Glide>
       )}
       {showVotes && voteIds.map((id) => {
-        const revealed = g.phase === 'VOTE_REVEAL' && g.revealedVotes ? g.revealedVotes[id] : null;
+        const revealed = faceUp ? faceUp[id] : null;
         return (
           <Glide key={`v-${id}`} to={[...tableSpot(seatOf(id), n, mySeat, 0.74, -0.04)].map((v, i) => (i === 1 ? v + 0.02 : v)) as [number, number, number]} flip={revealed !== null}>
             <Card kind={revealed === null ? null : revealed ? 'yes' : 'no'} back="#34466B" />

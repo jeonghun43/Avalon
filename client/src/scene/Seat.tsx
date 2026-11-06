@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Html } from '@react-three/drei';
-import type { PlayerInfo } from '@avalon/shared';
+import { CHAT, type PlayerInfo } from '@avalon/shared';
 import { Character, type Pose } from './Character';
 import { Chair } from './Room';
 import { drag } from './CameraRig';
@@ -27,10 +27,27 @@ interface Props {
   marks: SeatMarks;
   onPick: () => void;
   onKick: () => void;
+  /** 이 사람이 가장 최근에 한 말 (말풍선) */
+  said: { id: string; text: string; receivedAt: number } | null;
 }
 
-export function Seat({ player, position, rotY, gaze, pose, marks, onPick, onKick }: Props) {
+/** 말한 지 6초 동안만 머리 위에 말풍선을 띄운다 */
+function useBubble(said: Props['said']) {
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    if (!said) return;
+    const left = said.receivedAt + CHAT.bubbleMs - Date.now();
+    if (left <= 0) return;
+    setText(said.text);
+    const t = setTimeout(() => setText(null), left);
+    return () => clearTimeout(t);
+  }, [said?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  return text;
+}
+
+export function Seat({ player, position, rotY, gaze, pose, marks, onPick, onKick, said }: Props) {
   const [hover, setHover] = useState(false);
+  const bubble = useBubble(said);
   const click = () => {
     if (drag.moved > 6 || !marks.selectable) return;
     onPick();
@@ -57,9 +74,10 @@ export function Seat({ player, position, rotY, gaze, pose, marks, onPick, onKick
       )}
       <Html position={[0, 2.85, -0.35]} center distanceFactor={7} zIndexRange={[5, 0]}>
         <div className={`plate-wrap ${marks.selectable ? 'pick' : ''}`} onClick={click}>
+          {bubble && <div key={said?.id} className="bubble" role="status">{bubble}</div>}
           {marks.roleTag && <span className={`role-tag ${marks.roleTag.evil ? 'evil' : 'good'}`}>{marks.roleTag.text}</span>}
           <div className={`plate ${marks.selected ? "selected" : ""}`} style={{ background: player.color }}>
-            {marks.secret && <i className={`secret ${marks.secret}`} title={marks.secret === 'evil' ? '악의 세력' : '멀린 후보'} />}
+            {marks.secret && <span className={`secret ${marks.secret}`} title={marks.secret === 'evil' ? '악의 세력 (나만 보여요)' : '멀린 후보 (나만 보여요)'}>{marks.secret === 'evil' ? '악' : '후보'}</span>}
             {marks.leader && <span className="crown" aria-label="원정대장">♛</span>}
             <span>{player.nickname}</span>
             {marks.lookingAtMe && (

@@ -1,8 +1,8 @@
 import { randomInt, randomUUID } from 'node:crypto';
 import type { Server } from 'socket.io';
 import {
-  CHARACTERS, MAX_PLAYERS, SEAT_COLORS, TIMINGS, applyAction, createGame, projectGame, validateSetup,
-  type GameAction, type GameState, type PlayerInfo, type RoomOptions, type RoomView,
+  CHARACTERS, CHAT, MAX_PLAYERS, SEAT_COLORS, TIMINGS, applyAction, chatLength, cleanChat, createGame, projectGame, validateSetup,
+  type ChatMessage, type GameAction, type GameState, type PlayerInfo, type RoomOptions, type RoomView,
 } from '@avalon/shared';
 
 export const rng = () => randomInt(0, 2 ** 47) / 2 ** 47;
@@ -25,6 +25,12 @@ export class Room {
   /** 원정 결과 공개 중 지금까지 뒤집은 카드 수 */
   private questShown = 0;
   private revealTimers: NodeJS.Timeout[] = [];
+  private phaseDeadline: number | null = null;
+  private phaseKey = '';
+  /** 채팅은 메모리에만 잠깐 둔다. 디스크·로그에 남기지 않는다 */
+  private chat: { msg: Omit<ChatMessage, 'expiresInMs'>; expiresAt: number }[] = [];
+  private chatRate = new Map<string, { at: number; tokens: number }>();
+  private chatTtl = Number(process.env.CHAT_TTL_MS) || CHAT.ttlMs; // 테스트에서만 짧게
 
   constructor(readonly code: string, private io: Server, private onEmpty: () => void) {}
 
@@ -158,6 +164,8 @@ export class Room {
     if (!this.find(hostId)?.isHost) return { ok: false, error: '방장만 다시 시작할 수 있어요.' };
     if (this.inGame) return { ok: false, error: '게임이 아직 끝나지 않았어요.' };
     this.game = null;
+    this.phaseKey = '';
+    this.phaseDeadline = null;
     // 끝난 게임 동안 나간 사람은 로비에서 정리
     for (const m of [...this.members]) if (!m.connected) m.dropTimer = setTimeout(() => this.remove(m.id), LOBBY_DROP_MS);
     this.broadcast();
@@ -173,8 +181,12 @@ export class Room {
     return { ok: true };
   }
 
-  /** 상태가 바뀔 때마다: 자동 진행 타이머를 다시 잡고 모두에게 보낸다 */
+  /** 상태가 바뀔 때마다 모두에게 보낸다. 단계가 바뀌었을 때만 자동 진행 타이머를 다시 잡는다 */
   private afterChange() {
+    const g0 = this.game;
+    const key = g0 ? `${g0.phase}|${g0.round}|${g0.attempt}|${g0.history.length}` : '';
+    if (key === this.phaseKey) { this.broadcast(); return; } // 같은 단계 안의 행동 (예: 늦은 역할 확인)
+    this.phaseKey = key;
     if (this.phaseTimer) clearTimeout(this.phaseTimer);
     this.phaseTimer = null;
     this.revealTimers.forEach(clearTimeout);
@@ -184,18 +196,59 @@ export class Room {
     if (g?.phase === 'ROLE_REVEAL') ms = TIMINGS.roleRevealMs;
     else if (g?.phase === 'VOTE_REVEAL') ms = TIMINGS.voteRevealMs;
     else if (g?.phase === 'QUEST_REVEAL') {
-      // 카드를 한 장씩 보낸다. 마지막 카드가 나간 뒤에야 결과가 뷰에 들어간다
+      // 카드를 한 장씩 보낸다. 마지막 카드는 한 번 더 뜸을 들이고, 다 나간 뒤에야 결과가 뷰에 들어간다
       this.questShown = 0;
+      const last = g.questReveal.length - 1;
+      const at = (i: number) => TIMINGS.questRevealFirstMs + i * TIMINGS.questRevealPerCardMs + (i === last && i > 0 ? TIMINGS.questRevealLastPauseMs : 0);
       g.questReveal.forEach((_, i) => {
         this.revealTimers.push(setTimeout(() => {
           this.questShown = i + 1;
           this.broadcast();
-        }, TIMINGS.questRevealFirstMs + i * TIMINGS.questRevealPerCardMs));
+        }, at(i)));
       });
-      ms = TIMINGS.questRevealFirstMs + (g.questReveal.length - 1) * TIMINGS.questRevealPerCardMs + TIMINGS.questRevealTailMs;
+      ms = at(last) + TIMINGS.questRevealTailMs;
     }
-    if (ms) this.phaseTimer = setTimeout(() => this.action(null, { type: 'ADVANCE' }), ms);
+    if (ms) {
+      this.phaseTimer = setTimeout(() => this.action(null, { type: 'ADVANCE' }), ms);
+      this.phaseDeadline = Date.now() + ms;
+    } else this.phaseDeadline = null;
     this.broadcast();
+  }
+
+  sendChat(id: string, raw: unknown): Result {
+    const m = this.find(id);
+    if (!m) return { ok: false, error: '방에 있는 사람만 말할 수 있어요.' };
+    const text = cleanChat(raw);
+    const len = chatLength(text);
+    if (len < 1) return { ok: false, error: '내용을 입력해 주세요.' };
+    if (len > CHAT.maxChars) return { ok: false, error: `${CHAT.maxChars}자까지 보낼 수 있어요. 나눠서 보내 주세요.` };
+
+    // 도배 방지: 0.7초마다 1개씩 채워지는 통, 최대 5개까지 모아 둘 수 있음
+    const now = Date.now();
+    const r = this.chatRate.get(id) ?? { at: now, tokens: CHAT.burst };
+    r.tokens = Math.min(CHAT.burst, r.tokens + (now - r.at) / CHAT.minGapMs);
+    r.at = now;
+    if (r.tokens < 1) { this.chatRate.set(id, r); return { ok: false, error: '조금 천천히 보내 주세요.' }; }
+    r.tokens -= 1;
+    this.chatRate.set(id, r);
+
+    this.pruneChat(now);
+    const msg = { id: randomUUID().slice(0, 8), fromId: id, nickname: m.nickname, color: m.color, text };
+    this.chat.push({ msg, expiresAt: now + this.chatTtl });
+    if (this.chat.length > CHAT.keepPerRoom) this.chat.shift();
+    this.io.to(this.code).emit('chat:new', { ...msg, expiresInMs: this.chatTtl } satisfies ChatMessage);
+    return { ok: true };
+  }
+
+  /** 아직 사라지지 않은 말만 (입장·재접속한 사람에게) */
+  chatHistory(): ChatMessage[] {
+    const now = Date.now();
+    this.pruneChat(now);
+    return this.chat.map(({ msg, expiresAt }) => ({ ...msg, expiresInMs: expiresAt - now }));
+  }
+
+  private pruneChat(now: number) {
+    this.chat = this.chat.filter((c) => c.expiresAt > now);
   }
 
   viewFor(m: Member): RoomView {
@@ -205,6 +258,7 @@ export class Room {
       players: this.members.map(({ id, nickname, seat, model, color, connected, isHost }) => ({ id, nickname, seat, model, color, connected, isHost })),
       options: this.options,
       game: this.game ? projectGame(this.game, m.id, this.questShown) : null,
+      timerMs: this.phaseDeadline ? Math.max(0, this.phaseDeadline - Date.now()) : null,
     };
   }
 

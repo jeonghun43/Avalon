@@ -8,7 +8,8 @@ export default defineConfig({
   optimizeDeps: { include: ['react', 'react-dom', 'react-dom/client', 'zustand', 'socket.io-client', 'three', '@react-three/fiber', '@react-three/drei'] },
   server: {
     port: 5180, strictPort: true,
-    proxy: { '/socket.io': { target: 'http://localhost:3000', ws: true } },
+    // 기본은 :3000 서버. 다른 포트의 서버로 붙이려면 AVALON_SERVER=http://localhost:3001 처럼 지정
+    proxy: { '/socket.io': { target: process.env.AVALON_SERVER ?? 'http://localhost:3000', ws: true } },
   },
   build: {
     rollupOptions: {

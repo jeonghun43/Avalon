@@ -66,10 +66,26 @@ export const ROLE_GUIDE: Record<Role, string[]> = {
   ],
 };
 
+export const CHAT = {
+  maxChars: 16,        // 말풍선 두 줄(한 줄 한글 약 8자)에 다 들어가는 길이
+  ttlMs: 60_000,       // 1분 뒤 사라짐
+  bubbleMs: 6_000,     // 머리 위 말풍선
+  minGapMs: 700,       // 도배 방지: 1인당 0.7초 간격
+  burst: 5,            //          연속으로는 최대 5개
+  keepPerRoom: 50,     // 방마다 최대 보관 개수
+};
+
+/** 채팅 글을 정리한다: 제어 문자 제거, 앞뒤 공백 제거. 글자 수는 이모지·한글 모두 1자로 센다 */
+export function cleanChat(raw: unknown): string {
+  return String(raw ?? '').replace(/[\u0000-\u001f\u007f]/g, ' ').trim();
+}
+export const chatLength = (s: string) => [...s].length;
+
 export const TIMINGS = {
   roleRevealMs: 20_000,
   voteRevealMs: 4_000,
   questRevealFirstMs: 1_200,   // 카드가 모두 놓인 뒤 첫 장을 뒤집기까지
   questRevealPerCardMs: 1_100,
+  questRevealLastPauseMs: 900, // 마지막 카드 전에 한 번 더 뜸 들이기
   questRevealTailMs: 2_800,    // 마지막 장 뒤 결과를 보여주는 시간
 };

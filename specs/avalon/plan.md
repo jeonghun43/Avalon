@@ -189,7 +189,7 @@ avalon/
 └─ specs/ → ../specs/avalon (문서)
 ```
 
-> 코드는 `C:\Users\jjh03\vibe2\avalon\`에 만들고, 문서는 `specs/avalon/`에 둔다.
+> 코드는 저장소 루트(`avalon/`)에 만들고, 문서는 `specs/avalon/`에 둔다.
 
 ## 7. 실행과 배포
 

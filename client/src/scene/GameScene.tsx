@@ -22,7 +22,7 @@ export function pickAction(view: RoomView, targetId: string): 'team' | 'lady' | 
   return null;
 }
 
-function secretMark(g: GameView, id: string): SeatMarks['secret'] {
+export function secretMark(g: GameView, id: string): SeatMarks['secret'] {
   for (const k of g.me.knowledge) {
     if ((k.kind === 'EVIL_SEEN_BY_MERLIN' || k.kind === 'FELLOW_EVIL') && k.ids.includes(id)) return 'evil';
     if (k.kind === 'MERLIN_CANDIDATES' && k.ids.includes(id)) return 'candidate';
@@ -34,6 +34,7 @@ function secretMark(g: GameView, id: string): SeatMarks['secret'] {
 export function GameScene({ view, element }: { view: RoomView; element: HTMLElement | null }) {
   const gazes = useStore((s) => s.gazes);
   const pending = useStore((s) => s.pendingTarget);
+  const chat = useStore((s) => s.chat);
   const players = view.players;
   const n = players.length;
   const me = players.find((p) => p.id === view.meId)!;
@@ -81,6 +82,7 @@ export function GameScene({ view, element }: { view: RoomView; element: HTMLElem
                 else useStore.setState({ pendingTarget: p.id });
               }}
               onKick={() => api.kick(p.id)}
+              said={[...chat].reverse().find((c) => c.fromId === p.id) ?? null}
             />
           );
         })}

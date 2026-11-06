@@ -278,3 +278,15 @@ describe('원정 결과 공개 순서', () => {
     expect(done.history[0].quest).toEqual({ fails: 1, result: 'FAIL' });
   });
 });
+
+describe('늦은 역할 확인', () => {
+  it('20초가 지나 넘어간 뒤에도 확인을 기록하고, 단계는 바꾸지 않는다', () => {
+    let s = withRoles(['MERLIN', 'LOYAL_SERVANT', 'LOYAL_SERVANT', 'ASSASSIN', 'MINION']);
+    s = act(s, null, { type: 'ADVANCE' });
+    expect(s.phase).toBe('TEAM_BUILDING');
+    expect(projectGame(s, 'p2').me.acked).toBe(false);
+    s = act(s, 'p2', { type: 'ACK_ROLE' });
+    expect(s.phase).toBe('TEAM_BUILDING');
+    expect(projectGame(s, 'p2').me.acked).toBe(true);
+  });
+});

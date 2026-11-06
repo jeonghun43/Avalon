@@ -39,15 +39,30 @@ export function CameraRig({ element }: { element: HTMLElement | null }) {
       look.current.pitch = Math.max(PITCH_MIN, Math.min(PITCH_MAX, look.current.pitch + dy * k));
     };
     const onUp = () => { down = null; };
+    // 방향키로도 둘러보기 (입력 칸에 글을 쓰는 중이면 무시)
+    const onKey = (e: KeyboardEvent) => {
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      const step = 0.12;
+      const l = look.current;
+      if (e.key === 'ArrowLeft') l.yaw = Math.min(YAW_LIMIT, l.yaw + step);
+      else if (e.key === 'ArrowRight') l.yaw = Math.max(-YAW_LIMIT, l.yaw - step);
+      else if (e.key === 'ArrowUp') l.pitch = Math.min(PITCH_MAX, l.pitch + step);
+      else if (e.key === 'ArrowDown') l.pitch = Math.max(PITCH_MIN, l.pitch - step);
+      else return;
+      e.preventDefault();
+    };
     element.addEventListener('pointerdown', onDown);
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     window.addEventListener('pointercancel', onUp);
+    window.addEventListener('keydown', onKey);
     return () => {
       element.removeEventListener('pointerdown', onDown);
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
       window.removeEventListener('pointercancel', onUp);
+      window.removeEventListener('keydown', onKey);
     };
   }, [element]);
 

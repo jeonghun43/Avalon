@@ -22,7 +22,7 @@
 .room-code button { border: 0; }
 
 /* 로비 설정 */
-.lobby-panel { position: absolute; right: 14px; top: 72px; width: 280px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
+.lobby-panel { position: absolute; left: 14px; top: 72px; width: 280px; padding: 14px 16px; display: flex; flex-direction: column; gap: 9px; }
 .tg { display: flex; justify-content: space-between; align-items: center; gap: 10px; background: none; border: 0; color: inherit; padding: 0; text-align: left; width: 100%; }
 .tg small { display: block; color: var(--g-muted); font-size: 12px; }
 .sw { width: 40px; height: 22px; border-radius: 999px; background: var(--g-off); border: 2px solid var(--g-edge); position: relative; flex: none; }
@@ -47,7 +47,9 @@
 .role-badge.good { background: var(--g-good); }
 .role-badge.evil { background: var(--g-evil); }
 .role-badge.big { width: 84px; height: 84px; font-size: 44px; }
-.rec-btn { position: absolute; right: 14px; bottom: 14px; padding: 8px 16px; font-family: var(--f-cute); font-size: 16px; }
+.corner-btns { position: absolute; right: 14px; bottom: 14px; display: flex; gap: 8px; }
+.rec-btn, .sound-btn { padding: 8px 14px; font-family: var(--f-cute); font-size: 15px; }
+.sound-btn[aria-pressed="false"] { color: var(--g-muted); }
 
 .dim { position: absolute; inset: 0; background: rgba(10, 14, 16, .66); display: grid; place-items: center; padding: 16px; z-index: 30; }
 .modal { padding: 20px 24px; display: flex; flex-direction: column; gap: 10px; max-height: calc(100% - 32px); overflow: auto; }
@@ -116,7 +118,7 @@
 .plate { display: inline-flex; align-items: center; gap: 5px; font-family: var(--f-cute); color: #141414; padding: 2px 12px; border: 3px solid var(--g-edge); border-radius: 999px; white-space: nowrap; font-size: 17px; }
 .plate .crown { color: #6B4E0E; font-size: 16px; }
 .plate .eye { width: 20px; height: 20px; margin-right: -6px; }
-.secret { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--g-edge); display: inline-block; margin-left: -4px; }
+.secret { font-size: 12px; line-height: 1; padding: 3px 6px; border-radius: 6px; border: 2px solid var(--g-edge); color: var(--g-text); margin-left: -6px; }
 .secret.evil { background: var(--g-evil); }
 .secret.candidate { background: #A77BE0; }
 .role-tag { font-family: var(--f-cute); font-size: 14px; padding: 0 9px; border-radius: 6px; border: 2px solid var(--g-edge); color: var(--g-text); }
@@ -153,3 +155,84 @@
 @media (prefers-reduced-motion: reduce) { .hcard, .banner { transition: none; animation: none; } }
 .plate.selected { outline: 4px solid var(--g-gold); outline-offset: 2px; }
 .plate-wrap.pick .plate:hover { outline: 4px solid var(--g-text); outline-offset: 2px; }
+
+/* 내 차례 · 연결 끊김 */
+.status.my-turn { border-color: var(--g-gold); box-shadow: 0 4px 0 #8A6414; }
+.turn-tag { font-family: var(--f-cute); background: var(--g-gold); color: var(--g-edge); padding: 1px 10px; border-radius: 999px; animation: nudge 1.4s ease-in-out infinite; }
+@keyframes nudge { 50% { transform: translateY(-2px); } }
+.away { width: 100%; font-size: 13px; color: #F08A7E; font-family: var(--f-cute); }
+.countdown { color: var(--g-gold); font-family: var(--f-cute); }
+
+/* 내 상태 배지 */
+.me-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; align-items: center; }
+.me-tags .who { font-size: 13px; margin-right: 2px; }
+.me-tags .chip { font-size: 12px; padding: 0 7px; }
+
+/* 원정 카드 확정 */
+.hand-note.confirm { display: inline-flex; gap: 10px; align-items: center; white-space: nowrap; }
+.hand-note.confirm b { font-weight: 400; color: var(--g-gold); }
+
+/* 원형 좌석 지도 */
+.seat-map { position: absolute; top: 14px; right: 14px; width: 176px; height: 176px; border-radius: 50%; padding: 0; }
+.seat-map-table { position: absolute; inset: 30%; border-radius: 50%; background: var(--g-wood); border: 3px solid var(--g-edge); }
+.seat-dot { position: absolute; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; background: none; border: 0; padding: 0; color: var(--g-text); font-family: var(--f-cute); cursor: default; }
+.seat-dot:not(:disabled) { cursor: pointer; }
+.seat-dot:not(:disabled) .sm-face { outline: 2px dashed var(--g-text); outline-offset: 2px; }
+.sm-face { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--g-edge); display: grid; place-items: center; }
+.seat-dot.team .sm-face { box-shadow: 0 0 0 3px var(--g-gold); }
+.seat-dot.selected .sm-face { outline: 3px solid var(--g-gold); outline-offset: 2px; }
+.seat-dot.me .sm-name { color: var(--g-gold); }
+.seat-dot.off { opacity: .45; }
+.sm-name { font-size: 11px; line-height: 1.1; white-space: nowrap; text-shadow: 0 1px 0 var(--g-edge); }
+.sm-crown { position: absolute; top: -13px; font-size: 12px; color: var(--g-gold); }
+.sm-check { font-size: 12px; color: var(--g-edge); font-weight: 700; }
+.sm-secret { font-size: 9px; padding: 0 3px; border-radius: 4px; border: 1px solid var(--g-edge); }
+.sm-secret.evil { background: var(--g-evil); }
+.sm-secret.candidate { background: #A77BE0; }
+
+/* 안내 */
+.look-hint { position: absolute; left: 50%; top: 42%; transform: translateX(-50%); font-family: var(--f-cute); font-size: 17px; background: rgba(11, 14, 16, .75); padding: 8px 18px; border-radius: 999px; white-space: nowrap; pointer-events: none !important; }
+.rotate-hint { display: none; }
+@media (max-width: 600px) and (orientation: portrait) {
+  .rotate-hint { display: flex; position: absolute; left: 14px; right: 14px; top: 70px; padding: 8px 12px; gap: 8px; align-items: center; justify-content: space-between; font-family: var(--f-cute); font-size: 14px; z-index: 20; }
+}
+
+/* 로딩 */
+.loading { position: absolute; inset: 0; z-index: 50; background: var(--g-wall); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; font-family: var(--f-cute); font-size: 18px; }
+.loading .logo { font-size: 64px; }
+
+@media (max-width: 720px) {
+  .seat-map { width: 128px; height: 128px; top: auto; bottom: 120px; }
+  .sm-name { display: none; }
+  .role-mini small { display: none; }
+  .corner-btns .sound-btn { display: none; }
+}
+
+/* 채팅 (화면 오른쪽) */
+.chat-panel { position: absolute; right: 14px; top: 72px; bottom: 64px; width: 250px; padding: 8px; display: flex; flex-direction: column; gap: 8px; }
+.chat-panel.in-game { top: 204px; }
+.chat-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
+.chat-list li { display: flex; gap: 6px; align-items: baseline; transition: opacity 1s linear; }
+.chat-list .who { flex: none; font-size: 13px; margin-right: 0; }
+.chat-text { min-width: 0; overflow-wrap: anywhere; }
+.chat-empty { color: var(--g-muted); font-size: 12px; justify-content: center; }
+.chat-input { display: flex; gap: 6px; align-items: center; }
+.chat-input .field { flex: 1; min-width: 0; font-size: 15px; padding: 5px 8px; }
+.chat-count { font-size: 11px; color: var(--g-muted); font-variant-numeric: tabular-nums; }
+.chat-count.full { color: var(--g-gold); }
+.chat-open { align-self: stretch; }
+.chat-open .k { font-size: 11px; margin-left: 4px; }
+
+/* 말풍선 (캐릭터 이름표 위) */
+.bubble { position: relative; max-width: 9.5em; padding: 4px 11px; margin-bottom: 6px; background: var(--g-text); color: var(--g-edge); border: 3px solid var(--g-edge); border-radius: 12px; font-family: var(--f-cute); font-size: 17px; line-height: 1.25; text-align: center; overflow-wrap: anywhere; animation: bubble-in .18s ease-out; }
+.bubble::after { content: ""; position: absolute; left: 50%; bottom: -9px; transform: translateX(-50%); border: 6px solid transparent; border-top-color: var(--g-edge); }
+@keyframes bubble-in { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+@media (max-width: 720px) {
+  .chat-panel { width: 190px; top: 64px; bottom: auto; max-height: 38%; }
+  .chat-panel.in-game { top: 64px; }
+  .lobby-panel { left: 14px; right: 14px; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .bubble { animation: none; } }
+.chat-panel { position: absolute; }
+.chat-unread { position: absolute; left: 50%; bottom: 52px; transform: translateX(-50%); z-index: 2; border: 2px solid var(--g-edge); cursor: pointer; white-space: nowrap; }
