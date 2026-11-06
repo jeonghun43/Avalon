@@ -1,0 +1,468 @@
+<title>아발론 원탁 시안</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Jua&family=IBM+Plex+Sans+KR:wght@400;600&display=swap">
+<style>
+/* Layout: 문서는 한 줄기 세로 흐름, 각 시안은 16:9 게임 프레임 + 옆 설명. 게임 프레임 안은 테마와 무관한 고정 색 */
+:root{
+  --bg:#E6EAE9; --panel:#F3F5F4; --ink:#1B2225; --muted:#56646A; --line:#C6CFCE; --accent:#A8700A;
+  --f-display:"Black Han Sans","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-cute:"Jua","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+  --f-body:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+  /* 게임 화면 고정 팔레트 */
+  --g-wall:#22303A; --g-wood:#9A6B43; --g-panel:#1B2024; --g-edge:#0B0E10; --g-text:#EDE6D6;
+  --g-gold:#F2B53A; --g-good:#3D7BD9; --g-evil:#D9483B; --g-muted:#9AA3A6; --g-off:#454B50;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13181A; --panel:#1B2124; --ink:#E4E8E6; --muted:#97A3A7; --line:#2B3437; --accent:#F2B53A; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13181A; --panel:#1B2124; --ink:#E4E8E6; --muted:#97A3A7; --line:#2B3437; --accent:#F2B53A; color-scheme:dark}
+
+body{background:var(--bg); color:var(--ink); font-family:var(--f-body); font-size:15px; line-height:1.65}
+.wrap{max-width:1120px; margin:0 auto; padding-left:max(16px,env(safe-area-inset-left,0px)); padding-right:max(16px,env(safe-area-inset-right,0px)); padding-block:48px 80px; display:flex; flex-direction:column; gap:64px}
+h1,h2{font-family:var(--f-display); font-weight:400; letter-spacing:.01em; text-wrap:balance; margin:0}
+h1{font-size:clamp(34px,6vw,56px); line-height:1.1}
+h2{font-size:28px; line-height:1.2}
+h3{font-family:var(--f-cute); font-weight:400; font-size:21px; margin:0; display:flex; gap:10px; align-items:baseline}
+h3 .no{font-family:var(--f-body); font-size:13px; font-weight:600; color:var(--accent); font-variant-numeric:tabular-nums; letter-spacing:.06em}
+p{margin:0; max-width:68ch}
+.lead{color:var(--muted); font-size:16.5px}
+header{display:flex; flex-direction:column; gap:18px}
+.eyebrow{font-size:12px; font-weight:600; letter-spacing:.14em; color:var(--accent)}
+.dirs{display:flex; flex-wrap:wrap; gap:10px; margin-top:6px}
+.dirs span{border:1px solid var(--line); border-radius:999px; padding:5px 14px; font-size:13.5px}
+.dirs b{font-weight:600; margin-right:6px}
+section{display:flex; flex-direction:column; gap:28px}
+.sec-head{display:flex; flex-direction:column; gap:8px; border-top:2px solid var(--ink); padding-top:18px}
+
+.shot{display:grid; grid-template-columns:minmax(0,1fr) 260px; gap:22px; align-items:start}
+.shot-text{display:flex; flex-direction:column; gap:10px; min-width:0}
+.shot-text ul{margin:0; padding-left:18px; color:var(--muted); font-size:14px; display:flex; flex-direction:column; gap:6px}
+.shot-text .ac{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
+@media (max-width:820px){.shot{grid-template-columns:minmax(0,1fr)}}
+
+.frame-scroll{overflow-x:auto; border-radius:10px}
+.frame{position:relative; min-width:640px; aspect-ratio:16/9; container-type:inline-size; border-radius:10px; overflow:hidden; background:var(--g-wall); font-size:1.45cqw; color:var(--g-text); font-family:var(--f-body); line-height:1.4}
+.frame>svg{position:absolute; inset:0; width:100%; height:100%; display:block}
+
+.ui{position:absolute; background:var(--g-panel); color:var(--g-text); border:.18em solid var(--g-edge); border-radius:.6em; box-shadow:0 .3em 0 var(--g-edge)}
+.status{top:3.5%; left:2.5%; padding:.5em 1em; display:flex; gap:.7em; align-items:center}
+.chip{font-family:var(--f-cute); background:var(--g-gold); color:var(--g-edge); border-radius:.4em; padding:.05em .55em}
+.chip.blue{background:var(--g-good); color:var(--g-text)}
+.chip.red{background:var(--g-evil); color:var(--g-text)}
+.chip.dark{background:var(--g-off); color:var(--g-text)}
+.code{top:3.5%; right:2.5%; padding:.45em .9em; font-family:var(--f-cute); display:flex; gap:.6em; align-items:center}
+.code b{font-family:var(--f-display); font-weight:400; font-size:1.35em; letter-spacing:.18em; color:var(--g-gold)}
+.role-mini{left:2.5%; bottom:4.5%; display:flex; gap:.6em; align-items:center; padding:.4em .9em .4em .45em}
+.role-mini svg{width:2.6em; height:2.6em}
+.role-mini b{font-family:var(--f-cute); font-weight:400; font-size:1.25em; display:block; line-height:1.1}
+.role-mini small{color:var(--g-muted); font-size:.8em}
+.rec{right:2.5%; bottom:4.5%; padding:.45em .9em; font-family:var(--f-cute)}
+.hand{position:absolute; bottom:-3.2em; left:50%; transform:translateX(-50%); display:flex; gap:1.3em}
+.hcard{width:8em; height:11em; border-radius:.7em; border:.22em solid var(--g-edge); box-shadow:0 .35em 0 var(--g-edge); display:flex; flex-direction:column; align-items:center; padding-top:1.1em; gap:.2em; font-family:var(--f-cute)}
+.hcard .ic{font-size:2.6em; line-height:1}
+.hcard .lb{font-size:1.5em}
+.hcard.yes{background:var(--g-gold); color:var(--g-edge); transform:translateY(-1.4em) rotate(-5deg)}
+.hcard.no{background:#2A2D33; color:var(--g-text); transform:rotate(4deg)}
+.toast{top:19%; left:50%; transform:translateX(-50%); padding:.45em 1.3em; font-family:var(--f-display); font-size:2em; white-space:nowrap; display:flex; gap:.5em; align-items:center}
+.dim{position:absolute; inset:0; background:rgba(10,14,16,.66)}
+.modal{left:50%; top:50%; transform:translate(-50%,-50%); padding:1.4em 1.8em; display:flex; flex-direction:column; gap:.9em}
+.btn{display:inline-block; font-family:var(--f-cute); background:var(--g-gold); color:var(--g-edge); padding:.35em 1.3em; border:.18em solid var(--g-edge); border-radius:.5em; box-shadow:0 .25em 0 var(--g-edge); font-size:1.15em; text-align:center}
+.btn.off{background:var(--g-off); color:var(--g-muted)}
+.btn.ghost{background:transparent; color:var(--g-text); border-color:var(--g-off); box-shadow:none}
+.tip{position:absolute; background:var(--g-text); color:var(--g-edge); font-family:var(--f-cute); padding:.25em .7em; border-radius:.45em; border:.15em solid var(--g-edge); white-space:nowrap}
+.center-btn{position:absolute; left:50%; bottom:6%; transform:translateX(-50%)}
+.hint{position:absolute; left:50%; bottom:5%; transform:translateX(-50%); font-family:var(--f-cute); color:var(--g-muted); background:rgba(11,14,16,.55); padding:.2em .9em; border-radius:999px}
+.k{color:var(--g-muted); font-size:.85em; letter-spacing:.06em}
+.rule{height:.12em; background:var(--g-off); border:0; margin:0}
+.who{display:inline-flex; align-items:center; gap:.3em; font-family:var(--f-cute)}
+.dot{width:.7em; height:.7em; border-radius:50%; display:inline-block; border:.12em solid var(--g-edge)}
+
+/* 진입 */
+.entry{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1.4em}
+.entry .logo{font-family:var(--f-display); font-size:5em; color:var(--g-gold); line-height:1; letter-spacing:.06em}
+.entry .logo-sub{font-family:var(--f-cute); font-size:1.3em; margin-top:-.6em}
+.entry .row{display:flex; gap:1.6em}
+.entry .ui{position:static; padding:1.1em 1.3em; width:17em; display:flex; flex-direction:column; gap:.6em}
+.field{background:#0F1316; border:.15em solid var(--g-off); border-radius:.4em; padding:.35em .7em; font-family:var(--f-cute); font-size:1.1em}
+.codebox{display:flex; gap:.4em}
+.codebox span{flex:1; text-align:center; background:#0F1316; border:.15em solid var(--g-off); border-radius:.4em; font-family:var(--f-display); font-size:1.5em; color:var(--g-gold); padding:.1em 0}
+.panel-title{font-family:var(--f-cute); font-size:1.35em}
+
+/* 로비 설정 */
+.lobby-set{right:2.5%; top:17%; width:17em; padding:.9em 1.1em; display:flex; flex-direction:column; gap:.55em}
+.tg{display:flex; justify-content:space-between; align-items:center; gap:.6em}
+.tg small{display:block; color:var(--g-muted); font-size:.8em}
+.sw{width:2.4em; height:1.3em; border-radius:999px; background:var(--g-off); border:.14em solid var(--g-edge); position:relative; flex:none}
+.sw::after{content:""; position:absolute; top:.12em; left:.14em; width:.85em; height:.85em; border-radius:50%; background:var(--g-text)}
+.sw.on{background:var(--g-good)}
+.sw.on::after{left:auto; right:.14em}
+
+/* 역할 카드 */
+.rolecard{width:27em; align-items:stretch}
+.rolecard .top{display:flex; gap:1em; align-items:center}
+.rolecard .top svg{width:5.5em; height:5.5em; flex:none}
+.rolecard .name{font-family:var(--f-display); font-size:2.8em; line-height:1}
+.rolecard ul{margin:0; padding-left:1.2em; display:flex; flex-direction:column; gap:.25em}
+.result-list{display:grid; grid-template-columns:auto auto 1fr; gap:.25em 1em; align-items:center; font-size:.95em}
+.rounds{display:flex; gap:.4em}
+.rounds span{width:1.8em; height:1.8em; border-radius:50%; display:grid; place-items:center; font-family:var(--f-cute); border:.14em solid var(--g-edge)}
+
+/* 흐름 */
+.mm{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:20px; overflow-x:auto}
+.tbl-wrap{overflow-x:auto; border:1px solid var(--line); border-radius:10px}
+table{border-collapse:collapse; width:100%; min-width:860px; font-size:14px}
+th,td{text-align:left; vertical-align:top; padding:11px 14px; border-bottom:1px solid var(--line)}
+th{font-size:12px; letter-spacing:.08em; color:var(--muted); font-weight:600; background:var(--panel)}
+td:first-child{font-family:var(--f-cute); font-size:16px; white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.tag{display:inline-block; font-size:12px; padding:1px 8px; border-radius:999px; border:1px solid var(--line); margin:2px 4px 2px 0; white-space:nowrap}
+
+.sw-row{display:flex; flex-wrap:wrap; gap:14px}
+.swatch{display:flex; gap:10px; align-items:center; font-size:13.5px}
+.swatch i{width:34px; height:34px; border-radius:8px; border:1px solid var(--line); display:block}
+.fonts{display:flex; flex-wrap:wrap; gap:28px}
+.fonts div{display:flex; flex-direction:column; gap:2px}
+.fonts .s{font-size:28px; line-height:1.2}
+.fonts small{color:var(--muted)}
+@media (prefers-reduced-motion:no-preference){.hcard.yes{transition:transform .2s}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">디자인 시안 · 구현 전 확인용</div>
+    <h1>아발론 원탁</h1>
+    <p class="lead">화면 시안 10장, 유저 플로우, 게임 상황별 진행 흐름이에요. 아래 그림의 캐릭터는 자리 표시용 일러스트이고, 실제 게임에서는 KayKit 모험가 3D 모델이 들어가요.</p>
+    <div class="dirs">
+      <span><b>시점</b>Hand Simulator처럼 내 자리에서 1인칭</span>
+      <span><b>UI</b>덕코프처럼 두툼하고 단순하게</span>
+      <span><b>캐릭터</b>KayKit 모험가, 입장 시 랜덤 배정</span>
+      <span><b>조작</b>드래그로 둘러보기, 클릭으로 선택</span>
+    </div>
+  </header>
+
+  <section>
+    <div class="sec-head">
+      <h2>화면 시안</h2>
+      <p class="lead">모든 장면은 <b>나(지민)</b>의 시점이에요. 7인 게임에서 지민은 멀린이고, 악의 세력은 도윤(하수인), 서연(암살자), 민재(모드레드)예요.</p>
+    </div>
+    <div id="shots" style="display:flex;flex-direction:column;gap:48px"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>유저 플로우</h2>
+      <p class="lead">사이트에 처음 들어와서 게임을 마치고 다시 하기까지의 흐름이에요. 점선은 새로고침이나 연결 끊김에서 돌아오는 길이에요.</p>
+    </div>
+    <div class="mm"><pre class="mermaid">
+flowchart TD
+  A["사이트 접속"] --> B{"방 코드가 있나요?"}
+  B -- "없음" --> C["닉네임 입력 후 방 만들기"]
+  C --> D["방 코드 발급 · 내가 방장"]
+  B -- "있음" --> E["방 코드 + 닉네임 입력"]
+  E --> F{"입장할 수 있나요?"}
+  F -- "코드 없음 · 게임 중 · 10명 꽉 참 · 닉네임 중복" --> E
+  F -- "가능" --> G
+  D --> G["로비: 원탁에 착석<br/>캐릭터 랜덤 배정"]
+  G --> H{"방장: 5명 이상 모였나요?"}
+  H -- "아니요, 더 기다림" --> G
+  H -- "예, 게임 시작" --> I["역할 카드 확인"]
+  I --> J["게임 진행<br/>(아래 게임 진행 흐름)"]
+  J --> K["결과 화면: 승리 진영 · 전체 역할 · 기록"]
+  K -- "방장: 다시 하기" --> G
+  K -- "나가기" --> A
+  G -. "새로고침 · 끊김" .-> R["같은 브라우저로 재접속<br/>같은 자리 · 같은 역할로 복귀"]
+  J -. "새로고침 · 끊김" .-> R
+  R -.-> J
+    </pre></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>게임 진행 흐름</h2>
+      <p class="lead">서버가 관리하는 게임 단계와 넘어가는 조건이에요. 원정대 구성부터 원정 결과까지가 한 라운드이고, 최대 5라운드까지 반복돼요.</p>
+    </div>
+    <div class="mm"><pre class="mermaid">
+stateDiagram-v2
+  state "역할 확인" as REVEAL
+  state "원정대 구성" as TEAM
+  state "찬반 투표" as VOTE
+  state "투표 공개" as VREV
+  state "원정" as QUEST
+  state "원정 결과 공개" as QREV
+  state "호수의 여인" as LADY
+  state "암살" as ASSN
+  state "선의 승리" as GOOD
+  state "악의 승리" as EVIL
+  [*] --> REVEAL: 방장이 시작
+  REVEAL --> TEAM: 전원 확인 또는 20초
+  TEAM --> VOTE: 원정대장이 확정
+  VOTE --> VREV: 전원 제출
+  VREV --> TEAM: 부결 · 거부 +1 · 원정대장 교체
+  VREV --> EVIL: 5회 연속 부결
+  VREV --> QUEST: 가결 · 거부 0으로
+  QUEST --> QREV: 원정대원 전원 제출
+  QREV --> LADY: 2·3·4라운드 후 · 옵션 켜짐
+  LADY --> TEAM: 다음 라운드
+  QREV --> TEAM: 다음 라운드
+  QREV --> ASSN: 성공 3회
+  QREV --> EVIL: 실패 3회
+  ASSN --> GOOD: 멀린이 아님
+  ASSN --> EVIL: 멀린 적중
+  GOOD --> [*]
+  EVIL --> [*]
+    </pre></div>
+
+    <h3>상황별 진행</h3>
+    <div class="tbl-wrap"><table>
+      <thead><tr><th>상황</th><th>행동하는 사람</th><th>테이블에 모두가 보는 것</th><th>나만 보는 것</th><th>다음으로 넘어가는 조건</th></tr></thead>
+      <tbody>
+        <tr><td>로비</td><td>방장 (설정·시작)</td><td>사람이 들어올 때마다 의자와 캐릭터가 늘어남, 고개 방향</td><td>방장: 역할 옵션 토글</td><td>5명 이상에서 방장이 시작</td></tr>
+        <tr><td>역할 확인</td><td>전원</td><td>각자 고개를 숙여 카드를 보는 연출</td><td>내 역할 카드, 행동요령, 아는 사람 목록</td><td>전원 확인 또는 20초</td></tr>
+        <tr><td>원정대 구성</td><td>원정대장</td><td>원정대장 앞 왕관, 뽑힌 사람 앞 원정대 토큰이 실시간으로 놓이고 치워짐</td><td>원정대장: 클릭 선택, 확정 버튼</td><td>정해진 인원을 채우고 확정</td></tr>
+        <tr><td>찬반 투표</td><td>전원</td><td>낸 사람 앞에 뒷면 카드 (누가 냈는지만 보임)</td><td>찬성·반대 손패. 마지막 사람이 내기 전까지 바꾸기 가능</td><td>전원 제출</td></tr>
+        <tr><td>투표 공개</td><td>없음 (3초 연출)</td><td>모든 카드가 동시에 뒤집혀 자리별 찬반 공개, 요약 문구, 거부 트랙 이동</td><td>없음</td><td>가결이면 원정, 부결이면 다음 원정대장, 5회째 부결이면 악 승리</td></tr>
+        <tr><td>원정</td><td>원정대원</td><td>가운데에 뒷면 원정 카드가 모임</td><td>원정대원: 성공·실패 손패 (선은 실패 비활성)</td><td>원정대원 전원 제출</td></tr>
+        <tr><td>원정 결과 공개</td><td>없음 (한 장씩 연출)</td><td>섞인 카드가 한 장씩 뒤집힘, 라운드 보드에 성공(파랑)·실패(빨강) 마커</td><td>없음</td><td>3승이면 암살, 3패면 악 승리, 아니면 다음 라운드</td></tr>
+        <tr><td>호수의 여인</td><td>토큰 소유자</td><td>누가 누구를 확인했는지, 토큰이 대상에게 넘어감</td><td>소유자: 대상의 진영 결과 (역할 패널에 기록)</td><td>대상을 고르면 다음 라운드</td></tr>
+        <tr><td>암살</td><td>암살자</td><td>악의 세력 전원의 정체가 닉네임 위에 공개됨</td><td>암살자: 지목 클릭</td><td>지목하면 게임 종료</td></tr>
+        <tr><td>게임 종료</td><td>방장 (다시 하기)</td><td>모든 역할 공개, 승리 진영, 라운드 기록</td><td>없음</td><td>다시 하기를 누르면 같은 멤버로 로비</td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>색과 글꼴</h2>
+      <p class="lead">횃불이 켜진 돌방에 둥근 나무 원탁이 있는 분위기예요. 그라디언트와 빛나는 효과 없이 평평한 색면과 두꺼운 외곽선으로 덕코프의 단단한 느낌을 냈어요.</p>
+    </div>
+    <div class="sw-row">
+      <div class="swatch"><i style="background:#22303A"></i>돌벽</div>
+      <div class="swatch"><i style="background:#9A6B43"></i>원탁</div>
+      <div class="swatch"><i style="background:#1B2024"></i>UI 패널</div>
+      <div class="swatch"><i style="background:#EDE6D6"></i>UI 글자</div>
+      <div class="swatch"><i style="background:#F2B53A"></i>강조 · 찬성</div>
+      <div class="swatch"><i style="background:#3D7BD9"></i>선 · 성공</div>
+      <div class="swatch"><i style="background:#D9483B"></i>악 · 실패</div>
+    </div>
+    <div class="fonts">
+      <div><span class="s" style="font-family:var(--f-display)">원정 실패</span><small>Black Han Sans · 큰 제목, 결과 문구</small></div>
+      <div><span class="s" style="font-family:var(--f-cute)">지민 · 찬성</span><small>Jua · 닉네임, 카드, 버튼</small></div>
+      <div><span class="s" style="font-family:var(--f-body)">행동요령 안내</span><small>IBM Plex Sans KR · 본문</small></div>
+    </div>
+  </section>
+</div>
+
+<script>
+const W=960,H=540,CX=480,CY=350,RX=360,RY=116;
+const SKIN='#F3CBA5', EDGE='#0E1113';
+const P=[
+  {n:'지민',c:'#F2B53A',m:'knight'},
+  {n:'도윤',c:'#E8684A',m:'barbarian'},
+  {n:'서연',c:'#A77BE0',m:'mage'},
+  {n:'하준',c:'#4FA3D9',m:'rogue'},
+  {n:'유나',c:'#6CC08B',m:'ranger'},
+  {n:'민재',c:'#E58FB8',m:'knight'},
+  {n:'소희',c:'#8FD3C9',m:'mage'},
+];
+const rad=d=>d*Math.PI/180;
+function ang(k,n){ if(k===0) return 90; if(n===2) return 270; const g=50; return 90+g+(360-2*g)*(k-1)/(n-2); }
+function pt(k,n,f,off=0){ const a=rad(ang(k,n)+off); return [CX+RX*f*Math.cos(a), CY+RY*f*Math.sin(a)]; }
+
+const MODEL={
+  knight:{body:'#8E99A6', top:-132, hat:`<path d="M-42 -48 Q-42 -102 0 -102 Q42 -102 42 -48 L42 -36 L25 -36 L25 -58 L-25 -58 L-25 -36 L-42 -36 Z" fill="#B7C0CA" stroke="#6F7A86" stroke-width="3"/><rect x="-3" y="-101" width="6" height="40" fill="#8E99A6"/><path d="M0 -100 q8 -28 30 -32 q-12 14 -10 32z" fill="#C8463A" stroke="${EDGE}" stroke-width="2"/>`},
+  barbarian:{body:'#A0673F', top:-112, hat:`<circle cx="-31" cy="-94" r="13" fill="#6E4A2E" stroke="${EDGE}" stroke-width="2"/><circle cx="31" cy="-94" r="13" fill="#6E4A2E" stroke="${EDGE}" stroke-width="2"/><path d="M-46 -40 Q-46 -106 0 -106 Q46 -106 46 -40 L32 -50 Q0 -66 -32 -50 Z" fill="#7A5235" stroke="${EDGE}" stroke-width="2.5"/><path d="M-30 -26 Q0 10 30 -26 Q0 -14 -30 -26Z" fill="#B5562E"/>`},
+  mage:{body:'#5D4691', top:-160, hat:`<rect x="-41" y="-72" width="82" height="30" rx="14" fill="#6B4428"/><ellipse cx="0" cy="-74" rx="58" ry="13" fill="#4A3577" stroke="${EDGE}" stroke-width="2.5"/><path d="M-34 -78 L6 -152 Q14 -160 18 -148 L34 -78 Z" fill="#5D4691" stroke="${EDGE}" stroke-width="2.5"/><rect x="-32" y="-92" width="64" height="9" fill="#F2B53A"/>`},
+  rogue:{body:'#3F7D4E', top:-112, hat:`<path d="M-47 -8 L-47 -56 Q-47 -110 0 -110 Q47 -110 47 -56 L47 -8 L34 -8 L34 -60 Q0 -78 -34 -60 L-34 -8 Z" fill="#356B43" stroke="${EDGE}" stroke-width="2.5"/>`},
+  ranger:{body:'#3B3F58', top:-104, hat:`<path d="M-41 -58 Q-41 -100 0 -100 Q41 -100 41 -58 Q18 -78 -41 -58Z" fill="#4A2F1E"/><rect x="-43" y="-76" width="86" height="13" rx="4" fill="#C8463A" stroke="${EDGE}" stroke-width="2"/><path d="M40 -72 l18 6 l-6 10z" fill="#C8463A"/>`},
+};
+
+function charPos(k,n){ return pt(k,n,1.14); }
+function scaleAt(y){ const t=(y-(CY-RY*1.14))/(2*RY*1.14); return 0.52+0.5*t; }
+function lookAt(t,n){ if(t==='me') return [CX,H+120]; if(t==null||t==='c') return [CX,CY]; return charPos(t,n); }
+
+function character(k,n,o){
+  const p=o.roster[k], md=MODEL[p.m]; const [x,y]=charPos(k,n); const s=scaleAt(y);
+  const [tx,ty]=lookAt(o.look[k],n); const dx=tx-x, dy=ty-y, L=Math.hypot(dx,dy)||1;
+  const ex=dx/L*7, ey=dy/L*3, tilt=dx/L*10;
+  const ring=o.ring&&o.ring.k===k?`<ellipse cx="0" cy="-52" rx="64" ry="70" fill="none" stroke="${o.ring.c}" stroke-width="5" stroke-dasharray="12 7"/>`:'';
+  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s.toFixed(3)})">
+    <rect x="-48" y="-64" width="96" height="118" rx="12" fill="#4A2F1C" stroke="${EDGE}" stroke-width="2.5"/>
+    <rect x="-33" y="-18" width="66" height="74" rx="20" fill="${md.body}" stroke="${EDGE}" stroke-width="2.5"/>
+    <ellipse cx="-36" cy="16" rx="11" ry="17" fill="${md.body}" stroke="${EDGE}" stroke-width="2"/>
+    <ellipse cx="36" cy="16" rx="11" ry="17" fill="${md.body}" stroke="${EDGE}" stroke-width="2"/>
+    <g transform="rotate(${tilt.toFixed(1)} 0 -30)">
+      <rect x="-40" y="-90" width="80" height="78" rx="28" fill="${SKIN}" stroke="${EDGE}" stroke-width="2.5"/>
+      <ellipse cx="${(-24+ex*.6).toFixed(1)}" cy="-30" rx="6" ry="3.5" fill="#EFA88A"/>
+      <ellipse cx="${(24+ex*.6).toFixed(1)}" cy="-30" rx="6" ry="3.5" fill="#EFA88A"/>
+      <ellipse cx="${(-14+ex).toFixed(1)}" cy="${(-44+ey).toFixed(1)}" rx="4.3" ry="6.2" fill="#2A1E17"/>
+      <ellipse cx="${(14+ex).toFixed(1)}" cy="${(-44+ey).toFixed(1)}" rx="4.3" ry="6.2" fill="#2A1E17"/>
+      <path d="M${(-5+ex*.8).toFixed(1)} -27 q5 4 10 0" stroke="#7A3B2A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      ${md.hat}
+    </g>${ring}
+  </g>`;
+}
+
+function nameplate(k,n,o){
+  const p=o.roster[k], md=MODEL[p.m]; const [x,y]=charPos(k,n); const s=scaleAt(y); const ns=Math.max(s,.8);
+  const ty=y+md.top*s-10*ns; const w=p.n.length*16+30;
+  const eye=o.look[k]==='me'?`<g transform="translate(${w/2+14} -12)"><circle r="12" fill="${EDGE}"/><path d="M-8 0 Q0 -7 8 0 Q0 7 -8 0Z" fill="#EDE6D6"/><circle r="3" fill="${EDGE}"/></g>`:'';
+  const known=o.known&&o.known.includes(k)?`<circle cx="${-w/2-10}" cy="-12" r="7" fill="#D9483B" stroke="${EDGE}" stroke-width="2.5"/>`:'';
+  const tag=o.tags&&o.tags[k]?(()=>{const [t,c]=o.tags[k]; const tw=t.length*14+20; return `<g transform="translate(0 -32)"><rect x="${-tw/2}" y="-20" width="${tw}" height="20" rx="5" fill="${c}" stroke="${EDGE}" stroke-width="2"/><text y="-5" text-anchor="middle" font-family="Jua, sans-serif" font-size="13" fill="#EDE6D6">${t}</text></g>`})():'';
+  return `<g transform="translate(${x.toFixed(1)} ${ty.toFixed(1)}) scale(${ns.toFixed(3)})">
+    <rect x="${-w/2}" y="-25" width="${w}" height="26" rx="13" fill="${p.c}" stroke="${EDGE}" stroke-width="3"/>
+    <text y="-6" text-anchor="middle" font-family="Jua, sans-serif" font-size="16" fill="#141414">${p.n}</text>${eye}${known}${tag}
+  </g>`;
+}
+
+function coin(x,y,fill,icon,s=1){ return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) scale(${s})"><ellipse cy="4" rx="17" ry="8.5" fill="#3A2716"/><ellipse rx="17" ry="8.5" fill="${fill}" stroke="#2A1B10" stroke-width="2"/>${icon}</g>`; }
+const ICON_TEAM=`<path d="M-6 -5 h12 v3 q0 5 -6 7 q-6 -2 -6 -7z" fill="#2A3B5C"/>`;
+const ICON_LADY=`<path d="M-8 1 q4 -5 8 0 q4 5 8 0" stroke="#1E4B63" stroke-width="2.2" fill="none"/>`;
+function crown(x,y){ return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)})"><ellipse cy="5" rx="17" ry="5" fill="#3A2716" opacity=".6"/><path d="M-15 5 L-15 -9 L-7 -1 L0 -13 L7 -1 L15 -9 L15 5 Z" fill="#F2B53A" stroke="#6B4E0E" stroke-width="2.2" stroke-linejoin="round"/></g>`; }
+function card(x,y,kind,s=1,rot=0){
+  const st={down:['#34466B','',''],yes:['#F2B53A','찬성','#141414'],no:['#2A2D33','반대','#EDE6D6'],S:['#3D7BD9','성공','#EDE6D6'],F:['#D9483B','실패','#EDE6D6'],qdown:['#4B3626','','']}[kind];
+  const back=(kind==='down'||kind==='qdown')?`<rect x="-14" y="-7" width="28" height="14" rx="2" fill="none" stroke="${kind==='down'?'#5C74A8':'#7A5A3E'}" stroke-width="1.6"/><path d="M0 -5 L5 0 L0 5 L-5 0Z" fill="${kind==='down'?'#5C74A8':'#7A5A3E'}"/>`:`<text y="4.5" text-anchor="middle" font-family="Jua, sans-serif" font-size="12.5" fill="${st[2]}">${st[1]}</text>`;
+  return `<g transform="translate(${x.toFixed(1)} ${y.toFixed(1)}) rotate(${rot}) scale(${s})"><rect x="-20" y="-9" width="40" height="22" rx="3" fill="#120D08" opacity=".45"/><rect x="-20" y="-12" width="40" height="23" rx="3" fill="${st[0]}" stroke="${EDGE}" stroke-width="2"/>${back}</g>`;
+}
+
+function room(){
+  let s=`<rect width="${W}" height="${H}" fill="#22303A"/>`;
+  for(let r=0;r<9;r++){ const y=r*34; s+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#2C3D48" stroke-width="2"/>`;
+    for(let c=0;c<14;c++){ const x=c*80+(r%2?40:0); s+=`<line x1="${x}" y1="${y}" x2="${x}" y2="${y+34}" stroke="#2C3D48" stroke-width="2"/>`; } }
+  s+=`<rect y="300" width="${W}" height="240" fill="#1A2329"/>`;
+  s+=`<path d="M300 30 h72 v150 l-36 -20 l-36 20z" fill="#2F5FA8" stroke="${EDGE}" stroke-width="3"/><circle cx="336" cy="92" r="16" fill="none" stroke="#EDE6D6" stroke-width="4"/>`;
+  s+=`<path d="M588 30 h72 v150 l-36 -20 l-36 20z" fill="#A83A30" stroke="${EDGE}" stroke-width="3"/><path d="M624 74 l14 18 l-14 18 l-14 -18z" fill="none" stroke="#EDE6D6" stroke-width="4"/>`;
+  for(const tx of [140,820]){
+    s+=`<circle cx="${tx}" cy="118" r="120" fill="#F2B53A" opacity=".05"/><circle cx="${tx}" cy="118" r="70" fill="#F2B53A" opacity=".06"/>`;
+    s+=`<rect x="${tx-6}" y="122" width="12" height="40" fill="#3A2A1C" stroke="${EDGE}" stroke-width="2"/><rect x="${tx-14}" y="116" width="28" height="10" rx="3" fill="#5A4430" stroke="${EDGE}" stroke-width="2"/>`;
+    s+=`<path d="M${tx} 70 q18 24 10 42 q-10 8 -20 0 q-8 -18 10 -42z" fill="#E8703A"/><path d="M${tx} 88 q9 14 5 22 q-5 4 -10 0 q-4 -10 5 -22z" fill="#F2B53A"/>`;
+  }
+  return s;
+}
+function table(){
+  return `<ellipse cx="${CX}" cy="${CY+24}" rx="${RX+12}" ry="${RY+12}" fill="#0E1417" opacity=".55"/>
+  <ellipse cx="${CX}" cy="${CY+16}" rx="${RX}" ry="${RY}" fill="#5C3A22" stroke="${EDGE}" stroke-width="3"/>
+  <ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="#9A6B43" stroke="#6E4728" stroke-width="3"/>
+  <ellipse cx="${CX}" cy="${CY}" rx="${RX-22}" ry="${RY-8}" fill="none" stroke="#865A36" stroke-width="2"/>
+  <ellipse cx="${CX}" cy="${CY-8}" rx="205" ry="64" fill="#8A5D38"/>`;
+}
+function board(o,n){
+  const sizes={4:[2,3,2,3,3],5:[2,3,2,3,3],6:[2,3,4,3,4],7:[2,3,3,4,4]}[n]||[2,3,2,3,3];
+  let s='';
+  for(let i=0;i<5;i++){ const x=CX-128+64*i, y=CY-38;
+    s+=`<ellipse cx="${x}" cy="${y+3}" rx="25" ry="12" fill="#3E2716"/><ellipse cx="${x}" cy="${y}" rx="25" ry="12" fill="#5A3A24" stroke="#3E2716" stroke-width="2"/>`;
+    const r=o.board&&o.board[i];
+    if(r) s+=`<ellipse cx="${x}" cy="${y-1}" rx="19" ry="9.5" fill="${r==='S'?'#3D7BD9':'#D9483B'}" stroke="${EDGE}" stroke-width="2"/><text x="${x}" y="${y+4}" text-anchor="middle" font-family="Jua, sans-serif" font-size="12" fill="#EDE6D6">${r==='S'?'성공':'실패'}</text>`;
+    else s+=`<text x="${x}" y="${y+5}" text-anchor="middle" font-family="Jua, sans-serif" font-size="15" fill="#E9D7B5">${sizes[i]}</text>`;
+    if(o.cur===i) s+=`<ellipse cx="${x}" cy="${y}" rx="30" ry="15" fill="none" stroke="#F2B53A" stroke-width="2.5" stroke-dasharray="6 4"/>`;
+    if(i===3&&n>=7) s+=`<text x="${x}" y="${y+26}" text-anchor="middle" font-family="Jua, sans-serif" font-size="10" fill="#E9D7B5">실패 2장</text>`;
+  }
+  s+=`<text x="${CX-86}" y="${CY+8}" text-anchor="end" font-family="Jua, sans-serif" font-size="11" fill="#E9D7B5">거부</text>`;
+  for(let i=0;i<5;i++){ const x=CX-58+29*i, y=CY+4; s+=`<ellipse cx="${x}" cy="${y}" rx="9" ry="4.5" fill="${i<(o.reject||0)?'#F2B53A':'#4A3020'}" stroke="#3E2716" stroke-width="1.5"/>`; }
+  return s;
+}
+
+function scene(o){
+  const n=o.roster.length; let behind=[], front=[];
+  for(let k=1;k<n;k++){ const [,y]=charPos(k,n); (y<CY?behind:front).push([y,k]); }
+  behind.sort((a,b)=>a[0]-b[0]); front.sort((a,b)=>a[0]-b[0]);
+  let s=room();
+  behind.forEach(([,k])=>s+=character(k,n,o));
+  s+=table();
+  if(!o.empty) s+=board(o,n);
+  for(let k=0;k<n;k++){
+    if(o.leader===k){ const [x,y]=pt(k,n,.82,-13); s+=crown(x,y); }
+    if(o.team&&o.team.includes(k)){ const [x,y]=pt(k,n,.66,11); s+=coin(x,y,'#E7C15A',ICON_TEAM); }
+    if(o.lady===k){ const [x,y]=pt(k,n,.62,-14); s+=coin(x,y,'#7FC4E0',ICON_LADY,.9); }
+    if(o.votes&&o.votes[k]){ const [x,y]=pt(k,n,.77); s+=card(x,y,o.votes[k]); }
+  }
+  if(o.quest){ const m=o.quest.length; o.quest.forEach((q,i)=>s+=card(CX+(i-(m-1)/2)*50,CY+46,q,1.05,(i-1)*4)); }
+  front.forEach(([,k])=>s+=character(k,n,o));
+  const sleeve=MODEL[o.roster[0].m].body;
+  s+=`<g transform="translate(300 540) rotate(14)"><rect x="-30" y="-6" width="60" height="50" fill="${sleeve}" stroke="${EDGE}" stroke-width="3"/><ellipse cy="-10" rx="36" ry="25" fill="${SKIN}" stroke="${EDGE}" stroke-width="3"/><ellipse cx="27" cy="-22" rx="10" ry="8" fill="${SKIN}" stroke="${EDGE}" stroke-width="2.5"/></g>`;
+  s+=`<g transform="translate(660 540) rotate(-14)"><rect x="-30" y="-6" width="60" height="50" fill="${sleeve}" stroke="${EDGE}" stroke-width="3"/><ellipse cy="-10" rx="36" ry="25" fill="${SKIN}" stroke="${EDGE}" stroke-width="3"/><ellipse cx="-27" cy="-22" rx="10" ry="8" fill="${SKIN}" stroke="${EDGE}" stroke-width="2.5"/></g>`;
+  for(let k=1;k<n;k++) s+=nameplate(k,n,o);
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="원탁 1인칭 장면">${s}</svg>`;
+}
+
+const HAT=`<svg viewBox="-60 -165 120 120"><ellipse cx="0" cy="-74" rx="58" ry="13" fill="#4A3577" stroke="${EDGE}" stroke-width="5"/><path d="M-34 -78 L6 -152 Q14 -160 18 -148 L34 -78 Z" fill="#5D4691" stroke="${EDGE}" stroke-width="5"/><rect x="-32" y="-94" width="64" height="11" fill="#F2B53A"/></svg>`;
+const roleMini=`<div class="ui role-mini">${HAT}<div><b>멀린</b><small>선의 세력 · 눌러서 펼치기</small></div></div>`;
+const rec=`<div class="ui rec">기록</div>`;
+const who=(k)=>`<span class="who"><i class="dot" style="background:${P[k].c}"></i>${P[k].n}</span>`;
+const ALL=P;
+
+const SHOTS=[
+ {t:'진입 화면', ac:'US-1', notes:['방을 만들거나, 받은 4자리 코드로 들어와요.','닉네임은 1~10자이고 방 안에서 겹치면 안내해요.','뒤에는 빈 원탁이 보여서 들어갈 곳이 미리 보여요.'],
+  o:{roster:[P[0]],look:{},empty:true},
+  ui:`<div class="dim"></div><div class="entry"><div class="logo">AVALON</div><div class="logo-sub">원탁에 앉을 닉네임을 정해 주세요</div>
+   <div class="row"><div class="ui"><div class="panel-title">방 만들기</div><span class="k">닉네임</span><div class="field">지민</div><span class="btn">방 만들기</span></div>
+   <div class="ui"><div class="panel-title">방 참가</div><span class="k">방 코드</span><div class="codebox"><span>K</span><span>7</span><span>Q</span><span>M</span></div><span class="k">닉네임</span><div class="field">하준</div><span class="btn">입장</span></div></div></div>`},
+ {t:'로비 · 사람이 모이는 중', ac:'US-2 · US-3', notes:['들어온 순서대로 원탁에 앉고, 인원에 맞춰 간격이 다시 잡혀요.','캐릭터는 입장할 때 랜덤으로 정해져요. 모델이 겹치면 닉네임 색으로 구분해요.','도윤이 나를 보고 있어서 닉네임 옆에 눈 아이콘이 떠요.','방장만 오른쪽 설정을 바꿀 수 있고, 다른 사람에게는 읽기 전용으로 보여요.'],
+  o:{roster:[P[0],P[1],P[2],P[3]],look:{1:'me',2:'c',3:1},empty:true},
+  ui:`<div class="ui status"><span class="chip dark">대기 중</span>4/10명 · 5명부터 시작할 수 있어요</div>
+   <div class="ui code">방 코드 <b>K7QM</b><span class="chip">복사</span></div>
+   <div class="ui lobby-set"><div class="panel-title">방 설정 <span class="k">방장</span></div>
+    <div class="tg"><span>퍼시발 · 모르가나</span><i class="sw"></i></div>
+    <div class="tg"><span>모드레드</span><i class="sw"></i></div>
+    <div class="tg"><span>호수의 여인<small>7인 이상 권장</small></span><i class="sw on"></i></div>
+    <hr class="rule"><span class="k">5인 구성 · 선 3 · 악 2</span><span style="font-size:.9em">멀린, 기사 2 / 암살자, 하수인 1</span>
+    <span class="btn off">게임 시작 · 1명 더 필요</span></div>
+   <div class="hint">드래그해서 둘러보기</div>`},
+ {t:'역할 확인', ac:'US-4', notes:['게임이 시작되면 내 역할 카드가 크게 떠요.','행동요령과 내가 아는 사람이 한 장에 정리돼요.','확인을 누르면 카드가 왼쪽 아래 역할 패널로 작아져요.'],
+  o:{roster:ALL,look:{1:'c',2:'c',3:'c',4:'c',5:'c',6:'c'},board:[],cur:0},
+  ui:`<div class="dim"></div><div class="ui modal rolecard">
+   <div class="top">${HAT}<div><span class="k">당신의 역할</span><div class="name">멀린</div><span class="chip blue">선의 세력</span></div></div>
+   <hr class="rule"><span class="k">행동요령</span>
+   <ul><li>악의 세력이 누구인지 알고 있어요.</li><li>투표와 발언으로 선의 원정대를 은근히 도와주세요.</li><li>너무 티가 나면 마지막에 암살자에게 지목당해요.</li></ul>
+   <hr class="rule"><span class="k">내가 아는 정보</span><div>악의 세력: ${who(1)} ${who(2)}</div><span class="k">모드레드는 보이지 않아요.</span>
+   <div style="display:flex;justify-content:space-between;align-items:center"><span class="k">4/7명 확인함</span><span class="btn">확인했어요</span></div></div>`},
+ {t:'원정대 구성 · 내가 원정대장', ac:'US-5', notes:['내 앞에 왕관이 놓여 있어서 내가 원정대장이에요.','캐릭터나 닉네임을 클릭하면 그 사람 앞에 원정대 토큰이 놓여요. 모두에게 실시간으로 보여요.','멀린만 아는 악의 세력 표시(빨간 점)는 나에게만 보여요.','대부분이 나를 보고 있어서 닉네임 옆에 눈 아이콘이 떠 있어요.'],
+  o:{roster:ALL,look:{1:'me',2:3,3:'me',4:'me',5:'c',6:'me'},board:['S'],cur:1,leader:0,team:[0,3],known:[1,2]},
+  ui:`<div class="ui status"><span class="chip">2라운드</span>원정대원 3명을 골라 주세요 <span class="chip dark">2/3</span></div>${roleMini}${rec}
+   <div class="tip" style="left:72%;top:35%">← 클릭해서 원정대에 추가</div>
+   <div class="center-btn"><span class="btn off">원정대 확정</span></div>`},
+ {t:'찬반 투표 · 제출 중', ac:'US-6', notes:['찬성과 반대 카드가 손패처럼 아래에 올라와요.','이미 낸 사람 앞에는 뒷면 카드가 놓여요. 누가 냈는지만 알 수 있어요.','마지막 사람이 내기 전까지는 다시 고를 수 있어요.'],
+  o:{roster:ALL,look:{1:3,2:'me',3:4,4:'c',5:2,6:'c'},board:['S'],cur:1,leader:0,team:[0,3,4],known:[1,2],votes:{1:'down',2:'down',3:'down',4:'down',6:'down'}},
+  ui:`<div class="ui status"><span class="chip">찬반 투표</span>원정대 ${who(0)} ${who(3)} ${who(4)} <span class="chip dark">5/7 제출</span></div>${roleMini}${rec}
+   <div class="hand"><div class="hcard yes"><span class="ic">✓</span><span class="lb">찬성</span></div><div class="hcard no"><span class="ic">✕</span><span class="lb">반대</span></div></div>`},
+ {t:'찬반 투표 · 공개', ac:'US-6', notes:['전원이 내면 모든 카드가 한꺼번에 뒤집혀요.','각자 자리 앞에서 찬성(노랑)과 반대(검정)를 바로 읽을 수 있어요.','가결되면 거부 트랙이 0으로 돌아가고, 부결되면 한 칸 올라가요.'],
+  o:{roster:ALL,look:{1:5,2:'c',3:'me',4:3,5:1,6:'c'},board:['S'],cur:1,leader:0,team:[0,3,4],known:[1,2],votes:{0:'yes',1:'no',2:'yes',3:'yes',4:'yes',5:'no',6:'no'}},
+  ui:`<div class="ui status"><span class="chip">투표 공개</span>2라운드 첫 번째 원정대</div>${roleMini}${rec}
+   <div class="ui toast"><span style="color:var(--g-gold)">찬성 4</span><span style="color:var(--g-muted)">:</span><span>반대 3</span><span class="chip blue" style="font-size:.55em">가결</span></div>`},
+ {t:'원정 결과 공개', ac:'US-7', notes:['원정대원이 낸 카드가 가운데에 모였다가 섞여서 한 장씩 뒤집혀요.','누가 실패를 냈는지는 끝까지 알 수 없어요.','결과는 라운드 보드에 성공(파랑) 또는 실패(빨강) 마커로 남아요.'],
+  o:{roster:ALL,look:{1:'c',2:'c',3:1,4:6,5:'c',6:'me'},board:['S','S','F'],cur:2,leader:3,team:[1,3,6],known:[1,2],quest:['S','S','F']},
+  ui:`<div class="ui status"><span class="chip">3라운드</span>원정 결과 · 성공 2 · 실패 1</div>${roleMini}${rec}
+   <div class="ui toast" style="color:var(--g-evil)">원정 실패</div>`},
+ {t:'호수의 여인', ac:'US-8', notes:['토큰을 가진 사람이 확인할 사람을 클릭해요.','결과는 나에게만 보이고, 다른 사람은 누가 누구를 확인했는지만 알아요.','확인한 결과는 역할 패널의 "알게 된 정보"에 계속 남아요.'],
+  o:{roster:ALL,look:{1:2,2:'me',3:2,4:2,5:'me',6:2},board:['S','S','F'],cur:3,lady:0,known:[1,2],ring:{k:2,c:'#7FC4E0'}},
+  ui:`<div class="ui status"><span class="chip blue">호수의 여인</span>지민이 서연의 진영을 확인했어요</div>${roleMini}${rec}
+   <div class="ui modal" style="top:62%;width:19em"><span class="k">확인 결과 · 나만 볼 수 있어요</span><div style="font-size:1.4em">${who(2)}은(는) <span class="chip red">악의 세력</span></div><span class="btn" style="align-self:flex-end">닫기</span></div>`},
+ {t:'암살', ac:'US-9', notes:['선이 3승하면 악의 세력 전원의 정체가 공개돼요.','암살자만 다른 사람을 클릭해 멀린을 지목할 수 있어요.','악의 세력은 음성 채팅으로 상의하고, 시선이 어디로 쏠리는지도 단서가 돼요.'],
+  o:{roster:ALL,look:{1:'me',2:3,3:'c',4:'c',5:2,6:'me'},board:['S','S','F','S'],cur:-1,known:[1,2],tags:{1:['하수인','#D9483B'],2:['암살자','#D9483B'],5:['모드레드','#D9483B']},ring:{k:3,c:'#D9483B'}},
+  ui:`<div class="ui status"><span class="chip red">암살</span>암살자 서연이 멀린을 찾고 있어요</div>${roleMini}${rec}
+   <div class="hint">악의 세력이 상의하는 중이에요</div>`},
+ {t:'게임 종료', ac:'US-9 · US-11', notes:['승리 진영과 이유를 크게 보여줘요.','모든 사람의 역할과 라운드별 결과를 한 화면에서 확인해요.','방장이 다시 하기를 누르면 같은 멤버로 로비로 돌아가요.'],
+  o:{roster:ALL,look:{1:'c',2:'c',3:'me',4:'me',5:'c',6:'me'},board:['S','S','F','S'],cur:-1,tags:{1:['하수인','#D9483B'],2:['암살자','#D9483B'],5:['모드레드','#D9483B'],3:['기사','#3D7BD9'],4:['기사','#3D7BD9'],6:['기사','#3D7BD9']}},
+  ui:`<div class="dim"></div><div class="ui modal" style="width:30em">
+   <div style="font-family:var(--f-display);font-size:2.6em;line-height:1;color:var(--g-good)">선의 세력 승리</div>
+   <span>암살자 ${who(2)}이(가) ${who(3)}을(를) 지목했지만, 멀린은 ${who(0)}이었어요.</span>
+   <hr class="rule"><div class="result-list">
+    ${who(0)}<span>멀린</span><span class="chip blue" style="justify-self:start">선</span>
+    ${who(3)}<span>기사</span><span class="chip blue" style="justify-self:start">선</span>
+    ${who(4)}<span>기사</span><span class="chip blue" style="justify-self:start">선</span>
+    ${who(6)}<span>기사</span><span class="chip blue" style="justify-self:start">선</span>
+    ${who(2)}<span>암살자</span><span class="chip red" style="justify-self:start">악</span>
+    ${who(5)}<span>모드레드</span><span class="chip red" style="justify-self:start">악</span>
+    ${who(1)}<span>하수인</span><span class="chip red" style="justify-self:start">악</span></div>
+   <hr class="rule"><div style="display:flex;justify-content:space-between;align-items:center"><div class="rounds">
+    <span style="background:var(--g-good)">1</span><span style="background:var(--g-good)">2</span><span style="background:var(--g-evil)">3</span><span style="background:var(--g-good)">4</span><span style="background:var(--g-off)">5</span></div>
+    <div style="display:flex;gap:.6em"><span class="btn ghost">나가기</span><span class="btn">다시 하기</span></div></div></div>`},
+];
+
+document.getElementById('shots').innerHTML=SHOTS.map((s,i)=>`
+  <div class="shot">
+    <div class="frame-scroll"><div class="frame">${scene(s.o)}${s.ui}</div></div>
+    <div class="shot-text"><h3><span class="no">${String(i+1).padStart(2,'0')}</span>${s.t}</h3>
+      <ul>${s.notes.map(n=>`<li>${n}</li>`).join('')}</ul><span class="ac">spec ${s.ac}</span></div>
+  </div>`).join('');
+</script>

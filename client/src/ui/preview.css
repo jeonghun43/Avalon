@@ -1,0 +1,7 @@
+.pv { position: relative; height: 100%; }
+.pv-panel { position: absolute; left: 16px; top: 16px; width: min(380px, calc(100% - 32px)); padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.pv-panel p { margin: 0; }
+.pv-title { font-family: var(--f-display); font-size: 24px; }
+.pv-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pv-row .btn { font-size: 15px; padding: 3px 12px; }
+.plate { font-family: var(--f-cute); color: #141414; padding: 2px 12px; border: 3px solid var(--g-edge); border-radius: 999px; white-space: nowrap; font-size: 15px; pointer-events: none; }
